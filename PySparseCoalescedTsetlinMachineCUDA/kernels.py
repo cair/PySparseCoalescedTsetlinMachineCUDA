@@ -106,8 +106,9 @@ code_update = """
 
 		__device__ inline void calculate_clause_output(curandState *localState, unsigned int *ta_state, unsigned int *clause_output, int *clause_patch, int *X)
 		{
-			int output_one_patches[PATCHES];
-			int output_one_patches_count;
+			int output_one_patch_count = 0;
+			*clause_patch = -1;
+			*clause_output = 0;
 
 			// Evaluate each patch (convolution)
 			output_one_patches_count = 0;
@@ -125,18 +126,14 @@ code_update = """
 				}
 
 				if (patch_clause_output) {
-					output_one_patches[output_one_patches_count] = patch;
-					output_one_patches_count++;
+					if (output_one_patch_count == 0) {
+						*clause_patch = patch;
+						*clause_output = 1;
+					} else if ((curand(localState) % (output_one_patch_count + 1)) == 0) {
+						*clause_patch = patch;
+					}
+					output_one_patch_count += 1;
 				}
-			}
-		
-			if (output_one_patches_count > 0) {
-				*clause_output = 1;
-				int patch_id = curand(localState) % output_one_patches_count;
-				*clause_patch = output_one_patches[patch_id];
-			} else {
-				*clause_output = 0;
-				*clause_patch = -1;
 			}
 		}
 
