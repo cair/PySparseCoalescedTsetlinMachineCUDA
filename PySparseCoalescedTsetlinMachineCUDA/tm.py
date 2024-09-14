@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Ole-Christoffer Granmo
+# Copyright (c) 2024 Ole-Christoffer Granmo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -143,8 +143,8 @@ class CommonTsetlinMachine():
 		self.clause_weights = np.array([])
 
 	# Transform input data for processing at next layer
-	def transform(self, X):
-		X = csr_matrix(X)
+	def transform(self, graphs):
+		X = graphs.X
 
 		number_of_examples = X.shape[0]
 		
@@ -365,7 +365,7 @@ class CommonTsetlinMachine():
 
 		return class_sum
 	
-class MultiClassConvolutionalTsetlinMachine2D(CommonTsetlinMachine):
+class GraphTsetlinMachine(CommonTsetlinMachine):
 	"""
 	This class ...
 	"""
@@ -390,8 +390,8 @@ class MultiClassConvolutionalTsetlinMachine2D(CommonTsetlinMachine):
 		self.patch_dim = patch_dim
 		self.negative_clauses = 1
 
-	def fit(self, X, Y, epochs=100, incremental=False):
-		X = csr_matrix(X)
+	def fit(self, graphs, Y, epochs=100, incremental=False):
+		X = graphs.X
 
 		self.number_of_outputs = int(np.max(Y) + 1)
 	
