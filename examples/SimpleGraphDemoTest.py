@@ -11,7 +11,8 @@ number_of_training_examples = 1000
 
 max_sequence_length = 1000
 
-hypervector_size = 16
+hypervector_size = 256
+hypervector_bits = 3
 
 number_of_classes = 2 # Must be less than or equal to max sequence length
 
@@ -39,7 +40,7 @@ for i in range(number_of_training_examples):
 
 Y_train = np.where(np.random.rand(number_of_training_examples) < 0, 1 - Y_train, Y_train)  # Adds noise
 
-graphs_train.encode(hypervector_size=hypervector_size, hypervector_bits=1)
+graphs_train.encode(hypervector_size=hypervector_size, hypervector_bits=hypervector_bits)
 
 print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
