@@ -296,8 +296,8 @@ class CommonTsetlinMachine():
 			self.encoded_Y_gpu = cuda.mem_alloc(encoded_Y.nbytes)
 			cuda.memcpy_htod(self.encoded_Y_gpu, encoded_Y)
 
-	def _fit(self, X, encoded_Y, epochs=100, incremental=False):
-		self._init_fit(X, encoded_Y, incremental)
+	def _fit(self, graphs, encoded_Y, epochs=100, incremental=False):
+		self._init_fit(graphs.X, encoded_Y, incremental)
 
 		for epoch in range(epochs):
 			for e in range(X.shape[0]):
