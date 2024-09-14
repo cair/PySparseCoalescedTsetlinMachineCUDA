@@ -473,7 +473,7 @@ code_encode = """
 					int p_y = y - patch_coordinate_y;
 					int p_x = x - patch_coordinate_x;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int patch_pos = p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 					int chunk_nr = patch_pos / 32;
 					int chunk_pos = patch_pos % 32;
@@ -522,7 +522,7 @@ code_encode = """
 					int p_y = y - patch_coordinate_y;
 					int p_x = x - patch_coordinate_x;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int patch_pos = p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 					int chunk_nr = patch_pos / 32;
 					int chunk_pos = patch_pos % 32;
@@ -575,7 +575,7 @@ code_encode = """
 					int p_y = y - patch_coordinate_y;
 					int p_x = x - patch_coordinate_x;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int patch_pos = p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 					encoded_X[chunk * number_of_literals + patch_pos] |= (1U << pos);
 
@@ -623,7 +623,7 @@ code_encode = """
 					int p_y = y - patch_coordinate_y;
 					int p_x = x - patch_coordinate_x;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int patch_pos = p_y * patch_dim_x * dim_z + p_x * dim_z + z;
 
 					encoded_X[chunk * number_of_literals + patch_pos] &= ~(1U << pos);
 
