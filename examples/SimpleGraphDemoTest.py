@@ -9,7 +9,9 @@ epochs = 100
 
 number_of_training_examples = 1000
 
-max_sequence_length = 1
+max_sequence_length = 1000
+
+hypervector_size = 16
 
 number_of_classes = 2 # Must be less than or equal to max sequence length
 
@@ -22,7 +24,7 @@ for i in range(number_of_training_examples):
     # Select class
     Y_train[i] = np.random.randint(number_of_classes) 
 
-    nodes = 10
+    nodes = max_sequence_length
     for j in range(nodes):
         sequence_graph.add_node(j)
 
@@ -37,13 +39,13 @@ for i in range(number_of_training_examples):
 
 Y_train = np.where(np.random.rand(number_of_training_examples) < 0, 1 - Y_train, Y_train)  # Adds noise
 
-graphs_train.encode(hypervector_size=16, hypervector_bits=1)
+graphs_train.encode(hypervector_size=hypervector_size, hypervector_bits=1)
 
 print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassConvolutionalTsetlinMachine2D(10, 80, 5.0, (1, 10, 16), (1, 1))
+tm = MultiClassConvolutionalTsetlinMachine2D(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
 
 for i in range(epochs):
     start_training = time()
