@@ -404,12 +404,12 @@ class GraphTsetlinMachine(CommonTsetlinMachine):
 
 		self._fit(X, encoded_Y, epochs=epochs, incremental=incremental)
 
-	def score(self, X):
-		X = csr_matrix(X)
+	def score(self, graphs):
+		X = graphs.X
 		return self._score(X)
 
-	def predict(self, X):
-		return np.argmax(self.score(X), axis=1)
+	def predict(self, graphs):
+		return np.argmax(self.score(graphs), axis=1)
 
 class MultiOutputConvolutionalTsetlinMachine2D(CommonTsetlinMachine):
 	"""

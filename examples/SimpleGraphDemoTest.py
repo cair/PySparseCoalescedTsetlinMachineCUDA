@@ -2,7 +2,7 @@ from GraphTsetlinMachine.graph import Graph
 from GraphTsetlinMachine.graph import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
-from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassConvolutionalTsetlinMachine2D
+from PySparseCoalescedTsetlinMachineCUDA.tm import GraphTsetlinMachine
 from time import time
 
 epochs = 100
@@ -46,18 +46,18 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassConvolutionalTsetlinMachine2D(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
+tm = GraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
 
 for i in range(epochs):
     start_training = time()
-    tm.fit(graphs_train.X, Y_train, epochs=1, incremental=True)
+    tm.fit(graphs_train, Y_train, epochs=1, incremental=True)
     stop_training = time()
 
     start_testing = time()
-    result_test = 100*(tm.predict(graphs_train.X) == Y_train).mean()
+    result_test = 100*(tm.predict(graphs_train) == Y_train).mean()
     stop_testing = time()
 
-    result_train = 100*(tm.predict(graphs_train.X) == Y_train).mean()
+    result_train = 100*(tm.predict(graphs_train) == Y_train).mean()
 
     print("%d %.2f %.2f %.2f %.2f" % (i, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 
