@@ -43,7 +43,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassConvolutionalTsetlinMachine2D(10, 80, 5.0, (1, 1000, 1), (1, 1))
+tm = MultiClassConvolutionalTsetlinMachine2D(10, 80, 5.0, (1, 10, 16), (1, 1))
 
 for i in range(epochs):
     start_training = time()
