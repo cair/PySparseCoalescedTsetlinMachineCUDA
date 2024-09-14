@@ -1,8 +1,8 @@
-from GraphTsetlinMachine.graph import Graph
-from GraphTsetlinMachine.graph import Graphs
+from PySparseCoalescedTsetlinMachineCUDA.graph import Graph
+from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
-from PySparseCoalescedTsetlinMachineCUDA.tm import GraphTsetlinMachine
+from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
 from time import time
 
 epochs = 100
@@ -46,7 +46,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = GraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
+tm = MultiClassGraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
 
 for i in range(epochs):
     start_training = time()

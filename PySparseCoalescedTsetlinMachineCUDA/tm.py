@@ -365,7 +365,7 @@ class CommonTsetlinMachine():
 
 		return class_sum
 	
-class GraphTsetlinMachine(CommonTsetlinMachine):
+class MultiClassGraphTsetlinMachine(CommonTsetlinMachine):
 	"""
 	This class ...
 	"""
@@ -391,8 +391,6 @@ class GraphTsetlinMachine(CommonTsetlinMachine):
 		self.negative_clauses = 1
 
 	def fit(self, graphs, Y, epochs=100, incremental=False):
-		X = graphs.X
-
 		self.number_of_outputs = int(np.max(Y) + 1)
 	
 		self.max_y = None
@@ -402,7 +400,7 @@ class GraphTsetlinMachine(CommonTsetlinMachine):
 		for i in range(self.number_of_outputs):
 			encoded_Y[:,i] = np.where(Y == i, self.T, -self.T)
 
-		self._fit(X, encoded_Y, epochs=epochs, incremental=incremental)
+		self._fit(graphs, encoded_Y, epochs=epochs, incremental=incremental)
 
 	def score(self, graphs):
 		X = graphs.X
