@@ -300,7 +300,7 @@ class CommonTsetlinMachine():
 		self._init_fit(graphs.X, encoded_Y, incremental)
 
 		for epoch in range(epochs):
-			for e in range(X.shape[0]):
+			for e in range(graphs.X.shape[0]):
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
