@@ -111,7 +111,6 @@ code_update = """
 			*clause_output = 0;
 
 			// Evaluate each patch (convolution)
-			output_one_patches_count = 0;
 			for (int patch = 0; patch < PATCHES; ++patch) {
 				int patch_clause_output = 1;
 				for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
