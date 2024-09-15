@@ -512,12 +512,12 @@ code_encode = """
 
 					int chunk_nr = patch_pos / 32;
 					int chunk_pos = patch_pos % 32;
-					encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+					encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
 
 					if (append_negated) {
 						int chunk_nr = (patch_pos + number_of_features) / 32;
 						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+						encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
 					}
 				}
 		    }		
