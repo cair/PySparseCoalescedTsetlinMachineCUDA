@@ -460,7 +460,7 @@ code_encode = """
 				int patch = indices[k] / hypervector_size;
 				int feature = indices[k] % hypervector_size;
 
-				if (((patch - index) % stride) == 0) {
+				if (patch >= index && ((patch - index) % stride) == 0) {
 					int chunk_nr = feature / 32;
 					int chunk_pos = feature % 32;
 					encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
