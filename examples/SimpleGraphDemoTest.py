@@ -76,8 +76,13 @@ for i in range(args.number_of_examples):
     for j in range(nodes):
         sequence_graph.add_node(j)
 
-    j = np.random.randint(nodes)
+    for k in range(nodes):
+        if np.random.randint(2) == 0:
+            sequence_graph.add_feature(j, 'A')
+        else:
+            sequence_graph.add_feature(j, 'B')
 
+    j = np.random.randint(nodes)
     if Y_test[i] == 0:
         sequence_graph.add_feature(j, 'A')
     else:
