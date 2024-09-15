@@ -47,8 +47,8 @@ class Graph():
 		self.feature_counter += 1
 
 class Graphs():
-	def __init__(self):
-		self.hypervectors = {}
+	def __init__(self, hypervectors = {}):
+		self.hypervectors = hypervectors
 		self.edge_type_id = {}
 		self.graphs = []
 		self.encoded = False

@@ -58,7 +58,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-graphs_test = Graphs()
+graphs_test = Graphs(hypervectors = graph_train.hypervectors)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
