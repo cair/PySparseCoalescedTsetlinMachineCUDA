@@ -46,7 +46,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassGraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1))
+tm = MultiClassGraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1), max_included_literals=5)
 
 for i in range(epochs):
     start_training = time()
@@ -72,3 +72,16 @@ for i in range(tm.number_of_clauses):
                 else:
                     l.append(" NOT x%d" % (k - hypervector_size))
         print(" AND ".join(l))
+
+
+start_training = time()
+tm.fit(graphs_train, Y_train, epochs=1, incremental=True)
+stop_training = time()
+
+start_testing = time()
+result_test = 100*(tm.predict(graphs_train) == Y_train).mean()
+stop_testing = time()
+
+result_train = 100*(tm.predict(graphs_train) == Y_train).mean()
+
+print("%d %.2f %.2f %.2f %.2f" % (i, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
