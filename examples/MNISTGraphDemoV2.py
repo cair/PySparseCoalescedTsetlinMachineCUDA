@@ -44,9 +44,8 @@ for i in range(X_train.shape[0]):
                 node_id = str(q) + ":" + str(r)
                 image_graph.add_node(node_id)
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
-                for k in range(10*10):
-                    if patch[k] == 1:
-                        image_graph.add_feature(node_id, str(k))
+                for k in patch.nonzero():
+                    image_graph.add_feature(node_id, str(k))
                 image_graph.add_feature(node_id, 'c:'+str(q))
                 image_graph.add_feature(node_id, 'r:'+str(r))
     graphs_train.add(image_graph)
@@ -63,9 +62,8 @@ for i in range(X_test.shape[0]):
                 node_id = str(q) + ":" + str(r)
                 image_graph.add_node(node_id)
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
-                for k in range(10*10):
-                    if patch[k] == 1:
-                        image_graph.add_feature(node_id, str(k))
+                for k in patch.nonzero():
+                    image_graph.add_feature(node_id, str(k))
                 image_graph.add_feature(node_id, 'c:'+str(q))
                 image_graph.add_feature(node_id, 'r:'+str(r))
     graphs_test.add(image_graph)
