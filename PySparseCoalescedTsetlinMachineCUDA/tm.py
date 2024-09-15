@@ -344,7 +344,17 @@ class CommonTsetlinMachine():
 		for e in range(X.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
-			self.encode_packed.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+			self.encode_packed.prepared_call(
+				self.grid,
+				self.block,
+				self.X_test_indptr_gpu,
+				self.X_test_indices_gpu,
+				self.encoded_X_packed_gpu,
+				np.int32(e),
+				np.int32(graphs.hypervector_size),
+				graphs.node_count[e],
+				np.int32(self.append_negated)
+			)
 			cuda.Context.synchronize()
 
 			self.evaluate_packed.prepared_call(
