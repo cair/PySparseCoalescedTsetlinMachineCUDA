@@ -79,7 +79,7 @@ class CommonTsetlinMachine():
 		self.restore.prepare("PPPiiii")
 
 		self.encode_packed = mod_encode.get_function("encode_packed")
-		self.encode_packed.prepare("PPPiiii")
+		self.encode_packed.prepare("PPPiiiiiiii")
 		
 		self.restore_packed = mod_encode.get_function("restore_packed")
 		self.restore_packed.prepare("PPPiiiiiiii")
