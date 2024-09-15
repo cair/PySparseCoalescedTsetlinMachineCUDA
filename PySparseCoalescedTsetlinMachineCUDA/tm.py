@@ -78,6 +78,9 @@ class CommonTsetlinMachine():
 		self.encode = mod_encode.get_function("encode")
 		self.encode.prepare("PPPiiiiiiii")
 
+		self.restore_new = mod_encode.get_function("restore_new")
+		self.restore_new.prepare("PPPiiii")
+
 		self.restore = mod_encode.get_function("restore")
 		self.restore.prepare("PPPiiiiiiii")
 
