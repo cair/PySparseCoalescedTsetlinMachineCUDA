@@ -52,6 +52,12 @@ for i in range(args.number_of_examples):
 
 Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
+graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+
+print(graphs_train.hypervectors)
+print(graphs_train.edge_type_id)
+print(graphs_train.node_count)
+
 graphs_test = Graphs()
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
@@ -75,10 +81,6 @@ for i in range(args.number_of_examples):
     graphs_test.add(sequence_graph)
 
 graphs_test.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
-
-print(graphs_train.hypervectors)
-print(graphs_train.edge_type_id)
-print(graphs_train.node_count)
 
 tm = MultiClassGraphTsetlinMachine(args.number_of_clauses, args.T, args.s, (1, args.max_sequence_length, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
