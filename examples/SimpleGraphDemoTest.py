@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
 from time import time
 
-epochs = 100
+epochs = 10
 
 number_of_training_examples = 1000
 
