@@ -18,11 +18,11 @@ Y_test = Y_test.astype(np.uint32)
 def default_args(**kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", default=25, type=int)
-    parser.add_argument("--number-of-clauses", default=2, type=int)
-    parser.add_argument("--T", default=16, type=int)
+    parser.add_argument("--number-of-clauses", default=2500, type=int)
+    parser.add_argument("--T", default=2500, type=int)
     parser.add_argument("--s", default=1.0, type=float)
-    parser.add_argument("--hypervector_size", default=16, type=int)
-    parser.add_argument("--hypervector_bits", default=1, type=int)
+    parser.add_argument("--hypervector_size", default=128, type=int)
+    parser.add_argument("--hypervector_bits", default=2, type=int)
     parser.add_argument("--noise", default=0.0, type=float)
     parser.add_argument("--number-of-examples", default=1000, type=int)
     parser.add_argument("--max-sequence-length", default=1000, type=int)
@@ -39,6 +39,8 @@ args = default_args()
 
 graphs_train = Graphs()
 for i in range(X_train.shape[0]):
+    if i % 1000 == 0:
+        print(i, X_train.shape[0])
     image_graph = Graph() 
     windows = view_as_windows(X_train[i,:,:], (3, 3))
     for q in range(windows.shape[0]):
