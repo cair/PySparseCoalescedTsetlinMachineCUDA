@@ -11,8 +11,8 @@ number_of_training_examples = 1000
 
 max_sequence_length = 1000
 
-hypervector_size = 256
-hypervector_bits = 3
+hypervector_size = 16
+hypervector_bits = 1
 
 number_of_classes = 2 # Must be less than or equal to max sequence length
 
