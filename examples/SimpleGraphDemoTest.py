@@ -5,27 +5,38 @@ from scipy.sparse import csr_matrix
 from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
 from time import time
 
-epochs = 10
+def default_args(**kwargs):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", default=25, type=int)
+    parser.add_argument("--number-of-clauses", default=2, type=int)
+    parser.add_argument("--T", default=16, type=int)
+    parser.add_argument("--s", default=1.0, type=float)
+    parser.add_argument("--hypervector_size", default=16, type=int)
+    parser.add_argument("--hypervector_bits", default=1, type=int)
+    parser.add_argument("--noise", default=0.0, type=float)
+    parser.add_argument("--number-of-examples", default=1000, type=int)
+    parser.add_argument("--max-sequence-length", default=1000, type=int)
+    parser.add_argument("--number-of-classes", default=2, type=int)
+    parser.add_argument("--max-included-literals", default=1, type=int)
 
-number_of_training_examples = 1000
+    args = parser.parse_args()
+    for key, value in kwargs.items():
+        if key in args.__dict__:
+            setattr(args, key, value)
+    return args
 
-max_sequence_length = 1000
-
-hypervector_size = 16
-hypervector_bits = 1
-
-number_of_classes = 2 # Must be less than or equal to max sequence length
+args = default_args()
 
 graphs_train = Graphs()
-Y_train = np.empty(number_of_training_examples, dtype=np.uint32)
+Y_train = np.empty(args.number_of_examples, dtype=np.uint32)
 
-for i in range(number_of_training_examples):
+for i in range(args.number_of_examples):
     sequence_graph = Graph()
     
     # Select class
-    Y_train[i] = np.random.randint(number_of_classes) 
+    Y_train[i] = np.random.randint(args.number_of_classes) 
 
-    nodes = max_sequence_length
+    nodes = args.max_sequence_length
     for j in range(nodes):
         sequence_graph.add_node(j)
 
@@ -38,17 +49,17 @@ for i in range(number_of_training_examples):
 
     graphs_train.add(sequence_graph)
 
-Y_train = np.where(np.random.rand(number_of_training_examples) < 0, 1 - Y_train, Y_train)  # Adds noise
+Y_train = np.where(np.random.rand(number_of_training_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
-graphs_train.encode(hypervector_size=hypervector_size, hypervector_bits=hypervector_bits)
+graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
 print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassGraphTsetlinMachine(2, 10, 1.0, (1, max_sequence_length, hypervector_size), (1, 1), max_included_literals=1)
+tm = MultiClassGraphTsetlinMachine(args.number_of_clauses, args.T, args.s, (1, max_sequence_length, hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
-for i in range(epochs):
+for i in range(args.epochs):
     start_training = time()
     tm.fit(graphs_train, Y_train, epochs=1, incremental=True)
     stop_training = time()
