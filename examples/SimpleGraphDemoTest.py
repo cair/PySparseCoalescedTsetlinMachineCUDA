@@ -130,6 +130,6 @@ stop_testing = time()
 
 result_train = 100*(tm.predict(graphs_train) == Y_train).mean()
 
-print("%d %.2f %.2f %.2f %.2f" % (i, result_train, result_test, stop_training-start_training, stop_testing-start_testing))
+print("%.2f %.2f %.2f %.2f" % (result_train, result_test, stop_training-start_training, stop_testing-start_testing))
 
 print(graphs_train.hypervectors)
