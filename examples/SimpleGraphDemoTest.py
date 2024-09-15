@@ -50,7 +50,7 @@ for i in range(args.number_of_examples):
 
     graphs_train.add(sequence_graph)
 
-Y_train = np.where(np.random.rand(number_of_training_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
+Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
 graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
