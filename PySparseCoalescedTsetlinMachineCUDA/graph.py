@@ -56,6 +56,8 @@ class Graphs():
 		self.graphs.append(graph)
 
 	def encode(self, hypervectors = {}, hypervector_size=1024, hypervector_bits=3):
+		self.hypervectors = hypervectors
+
 		self.hypervector_size = hypervector_size
 		self.hypervector_bits = hypervector_bits
 
