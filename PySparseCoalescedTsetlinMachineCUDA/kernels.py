@@ -460,7 +460,7 @@ code_encode = """
 				int patch = indices[k] / hypervector_size;
 				int feature = indices[k] % hypervector_size;
 
-				if (((patch - index) % stride) == 0) {
+				if (patch >= index && ((patch - index) % stride) == 0) {
 					int chunk_nr = feature / 32;
 					int chunk_pos = feature % 32;
 					encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
@@ -495,7 +495,7 @@ code_encode = """
 				int patch = indices[k] / hypervector_size;
 				int feature = indices[k] % hypervector_size;
 
-				if (((patch - index) % stride) == 0) {
+				if (patch >= index && ((patch - index) % stride) == 0) {
 					int chunk_nr = feature / 32;
 					int chunk_pos = feature % 32;
 					encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
@@ -529,9 +529,8 @@ code_encode = """
 			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
 
 			for (int k = 0; k < number_of_indices; ++k) {
-				int y = indices[k] / (dim_x*dim_z);
-				int x = (indices[k] % (dim_x*dim_z)) / dim_z;
-				int z = (indices[k] % (dim_x*dim_z)) % dim_z;
+				int patch = indices[k] / hypervector_size;
+				int feature = indices[k] % hypervector_size;
 
 				for (int patch = index; patch < number_of_patches; patch += stride) {
 					int patch_coordinate_y = patch / (dim_x - patch_dim_x + 1);
