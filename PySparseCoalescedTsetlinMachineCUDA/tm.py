@@ -84,6 +84,9 @@ class CommonTsetlinMachine():
 		self.restore = mod_encode.get_function("restore")
 		self.restore.prepare("PPPiiiiiiii")
 
+		self.encode_packed_new = mod_encode.get_function("encode_packed_new")
+		self.encode_packed_new.prepare("PPPiiii")
+
 		self.encode_packed = mod_encode.get_function("encode_packed")
 		self.encode_packed.prepare("PPPiiiiiiii")
 		
@@ -183,7 +186,9 @@ class CommonTsetlinMachine():
 
 		X_transformed = np.empty((number_of_examples, self.number_of_clauses), dtype=np.uint32)
 		for e in range(number_of_examples):
-			self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.encode_packed_new.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+
+			#self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
 			cuda.Context.synchronize()
 
 			transform_gpu(
