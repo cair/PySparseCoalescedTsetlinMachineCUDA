@@ -47,8 +47,7 @@ class Graph():
 		self.feature_counter += 1
 
 class Graphs():
-	def __init__(self, hypervectors = {}):
-		self.hypervectors = hypervectors
+	def __init__(self):
 		self.edge_type_id = {}
 		self.graphs = []
 		self.encoded = False
@@ -56,7 +55,7 @@ class Graphs():
 	def add(self, graph):
 		self.graphs.append(graph)
 
-	def encode(self, hypervector_size=1024, hypervector_bits=3):
+	def encode(self, hypervectors = {}, hypervector_size=1024, hypervector_bits=3):
 		self.hypervector_size = hypervector_size
 		self.hypervector_bits = hypervector_bits
 
@@ -66,7 +65,6 @@ class Graphs():
 			global_feature_counter += graph.feature_counter *  self.hypervector_bits
 			global_edge_counter += len(graph.node_name_id) + graph.edge_counter*2
 
-		self.hypervectors = {}
 		indexes = np.arange(self.hypervector_size, dtype=np.uint32)
 
 		feature_row = np.empty(global_feature_counter, dtype=np.uint32)

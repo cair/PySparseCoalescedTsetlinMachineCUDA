@@ -58,7 +58,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-graphs_test = Graphs(hypervectors = graphs_train.hypervectors)
+graphs_test = Graphs()
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
@@ -80,7 +80,7 @@ for i in range(args.number_of_examples):
 
     graphs_test.add(sequence_graph)
 
-graphs_test.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_test.encode(hypervectors = graphs_train.hypervectors, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
 tm = MultiClassGraphTsetlinMachine(args.number_of_clauses, args.T, args.s, (1, args.max_sequence_length, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
