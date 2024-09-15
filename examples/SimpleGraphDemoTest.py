@@ -46,7 +46,7 @@ print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
 print(graphs_train.node_count)
 
-tm = MultiClassGraphTsetlinMachine(10, 80, 5.0, (1, max_sequence_length, hypervector_size), (1, 1), max_included_literals=1)
+tm = MultiClassGraphTsetlinMachine(2, 10, 1.0, (1, max_sequence_length, hypervector_size), (1, 1), max_included_literals=1)
 
 for i in range(epochs):
     start_training = time()
