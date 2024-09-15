@@ -114,9 +114,9 @@ for i in range(tm.number_of_clauses):
         for k in range(args.hypervector_size * 2):
             if tm.ta_action(i, k):
                 if k < args.hypervector_size:
-                    l.append(" x%d" % (k))
+                    l.append("x%d" % (k))
                 else:
-                    l.append(" NOT x%d" % (k - args.hypervector_size))
+                    l.append("NOT x%d" % (k - args.hypervector_size))
         print(" AND ".join(l))
 
 
