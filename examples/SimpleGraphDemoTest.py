@@ -52,7 +52,29 @@ for i in range(args.number_of_examples):
 
 Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
-graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_test = Graphs()
+Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
+
+for i in range(args.number_of_examples):
+    sequence_graph = Graph()
+    
+    # Select class
+    Y_test[i] = np.random.randint(args.number_of_classes) 
+
+    nodes = args.max_sequence_length
+    for j in range(nodes):
+        sequence_graph.add_node(j)
+
+    j = np.random.randint(nodes)
+
+    if Y_test[i] == 0:
+        sequence_graph.add_feature(j, 'A')
+    else:
+        sequence_graph.add_feature(j, 'B')
+
+    graphs_test.add(sequence_graph)
+
+graphs_test.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
 print(graphs_train.hypervectors)
 print(graphs_train.edge_type_id)
@@ -66,7 +88,7 @@ for i in range(args.epochs):
     stop_training = time()
 
     start_testing = time()
-    result_test = 100*(tm.predict(graphs_train) == Y_train).mean()
+    result_test = 100*(tm.predict(graphs_test) == Y_test).mean()
     stop_testing = time()
 
     result_train = 100*(tm.predict(graphs_train) == Y_train).mean()
@@ -91,7 +113,7 @@ tm.fit(graphs_train, Y_train, epochs=1, incremental=True)
 stop_training = time()
 
 start_testing = time()
-result_test = 100*(tm.predict(graphs_train) == Y_train).mean()
+result_test = 100*(tm.predict(graphs_test) == Y_test).mean()
 stop_testing = time()
 
 result_train = 100*(tm.predict(graphs_train) == Y_train).mean()
