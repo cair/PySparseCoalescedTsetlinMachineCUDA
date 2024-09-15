@@ -405,8 +405,7 @@ class MultiClassGraphTsetlinMachine(CommonTsetlinMachine):
 		self._fit(graphs, encoded_Y, epochs=epochs, incremental=incremental)
 
 	def score(self, graphs):
-		X = graphs.X
-		return self._score(X)
+		return self._score(graphs)
 
 	def predict(self, graphs):
 		return np.argmax(self.score(graphs), axis=1)
