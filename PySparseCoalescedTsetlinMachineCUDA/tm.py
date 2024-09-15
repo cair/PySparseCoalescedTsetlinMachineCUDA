@@ -79,7 +79,7 @@ class CommonTsetlinMachine():
 		self.restore.prepare("PPPiiii")
 
 		self.encode_packed = mod_encode.get_function("encode_packed")
-		self.encode_packed.prepare("PPPiiiiiiii")
+		self.encode_packed.prepare("PPPiiii")
 		
 		self.restore_packed = mod_encode.get_function("restore_packed")
 		self.restore_packed.prepare("PPPiiiiiiii")
@@ -321,10 +321,12 @@ class CommonTsetlinMachine():
 		
 		return
 
-	def _score(self, X):
+	def _score(self, graphs):
 		if not self.initialized:
 			print("Error: Model not trained.")
 			sys.exit(-1)
+
+		X = graphs.X
 
 		if not np.array_equal(self.X_test, np.concatenate((X.indptr, X.indices))):
 			self.X_test = np.concatenate((X.indptr, X.indices))
@@ -342,7 +344,7 @@ class CommonTsetlinMachine():
 		for e in range(X.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
-			self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.encode_packed.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
 			cuda.Context.synchronize()
 
 			self.evaluate_packed.prepared_call(
