@@ -23,11 +23,7 @@ def default_args(**kwargs):
     parser.add_argument("--s", default=1.0, type=float)
     parser.add_argument("--hypervector_size", default=128, type=int)
     parser.add_argument("--hypervector_bits", default=2, type=int)
-    parser.add_argument("--noise", default=0.0, type=float)
-    parser.add_argument("--number-of-examples", default=1000, type=int)
-    parser.add_argument("--max-sequence-length", default=1000, type=int)
-    parser.add_argument("--number-of-classes", default=2, type=int)
-    parser.add_argument("--max-included-literals", default=1, type=int)
+    parser.add_argument("--max-included-literals", default=32, type=int)
 
     args = parser.parse_args()
     for key, value in kwargs.items():
