@@ -624,7 +624,6 @@ code_encode = """
 			int stride = blockDim.x * gridDim.x;
 
 			int number_of_features = hypervector_size;
-			int number_of_patch_chunks = (number_of_patches-1) / 32 + 1;
 
 			int number_of_literals;
 			if (append_negated) {
@@ -667,7 +666,6 @@ code_encode = """
 			int stride = blockDim.x * gridDim.x;
 
 			int number_of_features = hypervector_size;
-			int number_of_patch_chunks = (number_of_patches-1) / 32 + 1;
 
 			int number_of_literals;
 			if (append_negated) {
@@ -703,7 +701,6 @@ code_encode = """
 
 			int number_of_features = patch_dim_x * patch_dim_y * dim_z;
 			int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
-			int number_of_patch_chunks = (number_of_patches-1) / 32 + 1;
 
 			int number_of_literals;
 			if (append_negated) {
