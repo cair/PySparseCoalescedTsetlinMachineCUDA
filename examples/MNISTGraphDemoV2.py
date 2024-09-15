@@ -45,7 +45,6 @@ for i in range(X_train.shape[0]):
                 image_graph.add_node(node_id)
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 for k in patch.nonzero()[0]:
-                    print(k)
                     image_graph.add_feature(node_id, str(k))
                 image_graph.add_feature(node_id, 'c:'+str(q))
                 image_graph.add_feature(node_id, 'r:'+str(r))
