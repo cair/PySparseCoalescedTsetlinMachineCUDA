@@ -46,8 +46,8 @@ for i in range(X_train.shape[0]):
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 patch_id = patch.dot(1 << np.arange(patch.shape[-1] - 1, -1, -1))
                 image_graph.add_feature(node_id, str(patch_id))
-                image_graph.add_feature(node_id, str(q))
-                image_graph.add_feature(node_id, str(r))
+                image_graph.add_feature(node_id, 'c:'+str(q))
+                image_graph.add_feature(node_id, 'r:'+str(r))
     graphs_train.add(image_graph)
 graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
