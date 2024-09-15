@@ -307,8 +307,8 @@ class CommonTsetlinMachine():
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
-				#self.encode_new.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
-				self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+				self.encode_new.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+				#self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
 				cuda.Context.synchronize()
 
 				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu)
@@ -317,7 +317,8 @@ class CommonTsetlinMachine():
 				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+				self.restore_new.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+				#self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
 				cuda.Context.synchronize()
 
 		self.ta_state = np.array([])

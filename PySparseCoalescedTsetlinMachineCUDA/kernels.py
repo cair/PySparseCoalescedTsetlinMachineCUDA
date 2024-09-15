@@ -477,6 +477,41 @@ code_encode = """
 		    }		
 		}
 
+		__global__ void restore_new(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int hypervector_size, int number_of_patches, int append_negated)
+		{
+			int index = blockIdx.x * blockDim.x + threadIdx.x;
+			int stride = blockDim.x * gridDim.x;
+
+			int number_of_features = hypervector_size;
+
+			int number_of_ta_chunks;
+			if (append_negated) {
+				number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
+			} else {
+				number_of_ta_chunks= (((number_of_features-1)/32 + 1));
+			}
+
+			unsigned int *indices = &X_indices[X_indptr[e]];
+			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
+
+			for (int k = 0; k < number_of_indices; ++k) {
+				int patch = indices[k] / hypervector_size;
+				int feature = indices[k] % hypervector_size;
+
+				if (patch >= index && ((patch - index) % stride) == 0) {
+					int chunk_nr = feature / 32;
+					int chunk_pos = feature % 32;
+					encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+
+					if (append_negated) {
+						int chunk_nr = (feature + number_of_features) / 32;
+						int chunk_pos = (feature + number_of_features) % 32;
+						encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+					}
+				}
+		    }		
+		}
+
 		__global__ void encode(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
