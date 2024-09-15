@@ -77,12 +77,12 @@ weights = tm.get_state()[1].reshape(2, -1)
 for i in range(tm.number_of_clauses):
         print("Clause #%d W:(%d %d)" % (i, weights[0,i], weights[1,i]), end=' ')
         l = []
-        for k in range(hypervector_size * 2):
+        for k in range(args.hypervector_size * 2):
             if tm.ta_action(i, k):
-                if k < hypervector_size:
+                if k < args.hypervector_size:
                     l.append(" x%d" % (k))
                 else:
-                    l.append(" NOT x%d" % (k - hypervector_size))
+                    l.append(" NOT x%d" % (k - args.hypervector_size))
         print(" AND ".join(l))
 
 
