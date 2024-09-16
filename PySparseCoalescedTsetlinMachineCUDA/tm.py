@@ -47,6 +47,7 @@ class CommonTsetlinMachine():
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
 			append_negated=True,
+			depth=1,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
@@ -211,16 +212,16 @@ class CommonTsetlinMachine():
 		
 		return csr_matrix(X_transformed)
 
-	def _init(self, X):
+	def _init(self, graphs):
 		if self.append_negated:
-			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2]*2)
+			self.number_of_features = graphs.hypervector_size*self.depth*2
 		else:
-			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2])
+			self.number_of_features = graphs.hypervector_size*self.depth
 
 		if self.max_included_literals == None:
 			self.max_included_literals = self.number_of_features
 
-		self.number_of_patches = int((self.dim[0] - self.patch_dim[0] + 1)*(self.dim[1] - self.patch_dim[1] + 1))
+		self.number_of_patches = graphs.max_node_count
 		self.number_of_ta_chunks = int((self.number_of_features-1)/32 + 1)
 
 		parameters = """
@@ -236,7 +237,7 @@ class CommonTsetlinMachine():
 #define NEGATIVE_CLAUSES %d
 #define PATCHES %d
 #define NUMBER_OF_EXAMPLES %d
-""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, self.number_of_patches, X.shape[0])
+""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, self.number_of_patches, graphs.X.shape[0])
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
@@ -287,22 +288,22 @@ class CommonTsetlinMachine():
 
 		self.initialized = True
 
-	def _init_fit(self, X, encoded_Y, incremental):
+	def _init_fit(self, graphs, encoded_Y, incremental):
 		if not self.initialized:
-			self._init(X)
+			self._init(graphs)
 			self.prepare(g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, grid=self.grid, block=self.block)
 			cuda.Context.synchronize()
 		elif incremental == False:
 			self.prepare(g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, grid=self.grid, block=self.block)
 			cuda.Context.synchronize()
 
-		if not np.array_equal(self.X_train, np.concatenate((X.indptr, X.indices))):
-			self.train_X = np.concatenate((X.indptr, X.indices))
-			self.X_train_indptr_gpu = cuda.mem_alloc(X.indptr.nbytes)
-			cuda.memcpy_htod(self.X_train_indptr_gpu, X.indptr)
+		if not np.array_equal(self.graphs_signature_train, graphs.signature):
+			self.graphs_signature_train = graphs.signature
+			self.X_train_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
+			cuda.memcpy_htod(self.X_train_indptr_gpu, graphs.X.indptr)
 
-			self.X_train_indices_gpu = cuda.mem_alloc(X.indices.nbytes)
-			cuda.memcpy_htod(self.X_train_indices_gpu, X.indices)
+			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
+			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
 
 		if not np.array_equal(self.encoded_Y, encoded_Y):
 			self.encoded_Y = encoded_Y
@@ -311,7 +312,7 @@ class CommonTsetlinMachine():
 			cuda.memcpy_htod(self.encoded_Y_gpu, encoded_Y)
 
 	def _fit(self, graphs, encoded_Y, epochs=100, incremental=False):
-		self._init_fit(graphs.X, encoded_Y, incremental)
+		self._init_fit(graphs, encoded_Y, incremental)
 
 		for epoch in range(epochs):
 			for e in range(graphs.X.shape[0]):
@@ -337,25 +338,25 @@ class CommonTsetlinMachine():
 		
 		return
 
-	def _score(self, X):
+	def _score(self, graphs):
 		if not self.initialized:
 			print("Error: Model not trained.")
 			sys.exit(-1)
 
-		if not np.array_equal(self.X_test, np.concatenate((X.indptr, X.indices))):
-			self.X_test = np.concatenate((X.indptr, X.indices))
+		if not np.array_equal(self.graphs_signature_test, graphs.signature):
+			self.graphs_signature_test = graphs.signature
 
-			self.X_test_indptr_gpu = cuda.mem_alloc(X.indptr.nbytes)
-			cuda.memcpy_htod(self.X_test_indptr_gpu, X.indptr)
+			self.X_test_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
+			cuda.memcpy_htod(self.X_test_indptr_gpu, graphs.X.indptr)
 
-			self.X_test_indices_gpu = cuda.mem_alloc(X.indices.nbytes)
-			cuda.memcpy_htod(self.X_test_indices_gpu, X.indices)
+			self.X_test_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
+			cuda.memcpy_htod(self.X_test_indices_gpu, graphs.X.indices)
 
 		self.prepare_packed(g.state, self.ta_state_gpu, self.included_literals_gpu, self.included_literals_length_gpu, self.excluded_literals_gpu, self.excluded_literals_length_gpu, grid=self.grid, block=self.block)
 		cuda.Context.synchronize()
         
 		class_sum = np.zeros((X.shape[0], self.number_of_outputs), dtype=np.int32)
-		for e in range(X.shape[0]):
+		for e in range(graphs.X.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
 			self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
@@ -398,10 +399,23 @@ class MultiClassGraphTsetlinMachine(CommonTsetlinMachine):
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
 			append_negated=True,
+			depth=1,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(
+			number_of_clauses,
+			T,
+			s,
+			q=q,
+			max_included_literals=max_included_literals,
+			boost_true_positive_feedback=boost_true_positive_feedback,
+			number_of_state_bits=number_of_state_bits,
+			append_negated=append_negated,
+			depth=depth,
+			grid=grid,
+			block=block
+		)
 		self.dim = dim
 		self.patch_dim = patch_dim
 		self.negative_clauses = 1
@@ -419,8 +433,7 @@ class MultiClassGraphTsetlinMachine(CommonTsetlinMachine):
 		self._fit(graphs, encoded_Y, epochs=epochs, incremental=incremental)
 
 	def score(self, graphs):
-		X = graphs.X
-		return self._score(X)
+		return self._score(graphs)
 
 	def predict(self, graphs):
 		return np.argmax(self.score(graphs), axis=1)
