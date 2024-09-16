@@ -29,18 +29,16 @@ code_header = """
 	#define LA_CHUNKS (((FEATURES-1)/INT_SIZE + 1))
 	#define CLAUSE_CHUNKS ((CLAUSES-1)/INT_SIZE + 1)
 
+	#if (PATCHES % 32 != 0)
+	#define PATCH_FILTER (~(0xffffffff << (PATCH_FEATURES % INT_SIZE)))
+	#else
+	#define PATCH_FILTER 0xffffffff
+	#endif
+
 	#if (FEATURES % 32 != 0)
 	#define FILTER (~(0xffffffff << (FEATURES % INT_SIZE)))
 	#else
 	#define FILTER 0xffffffff
-	#endif
-
-	#define PATCH_CHUNKS (((PATCHES-1)/INT_SIZE + 1))
-
-	#if (PATCH_CHUNKS % 32 != 0)
-	#define PATCH_FILTER (~(0xffffffff << (PATCHES % INT_SIZE)))
-	#else
-	#define PATCH_FILTER 0xffffffff
 	#endif
 """
 
@@ -338,13 +336,21 @@ code_evaluate = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
+			int patch_chunks = (((number_of_nodes-1)/INT_SIZE + 1))
+			unsigned int patch_filter;
+			if (patch_chunks % 32 != 0) {
+				patch_filter = (~(0xffffffff << (number_of_nodes % INT_SIZE)));
+			} else {
+				patch_filter = 0xffffffff;
+			}
+
 			for (int clause = index; clause < CLAUSES; clause += stride) {
 				if (included_literals_length[clause] == 0) {
 					continue;
 				}
 
 				unsigned int clause_output = 0;
-				for (int patch_chunk = 0; patch_chunk < PATCH_CHUNKS-1; ++patch_chunk) {
+				for (int patch_chunk = 0; patch_chunk < patch_chunks-1; ++patch_chunk) {
 					clause_output = (~(0U));
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
 						clause_output &= X[patch_chunk*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
@@ -356,9 +362,9 @@ code_evaluate = """
 				}
 
 				if (!clause_output) {
-					clause_output = PATCH_FILTER;
+					clause_output = patch_filter;
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[(PATCH_CHUNKS-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
+						clause_output &= X[(patch_chunks-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
 					}
 				}
 
