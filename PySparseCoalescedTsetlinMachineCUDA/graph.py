@@ -120,12 +120,11 @@ class Graphs():
 					local_edge_position += 1
 
 		self.X = coo_matrix((feature_data, (feature_row, feature_col))).tocsr()
+		self.X.sum_duplicates()
 		self.edges = coo_matrix((edge_data, (edge_row, edge_col))).tocsr()
 
 		self.max_node_count = self.node_count.max()
-
-		self.signature = np.concatenate((self.X.indptr, self.X.indices, self.edges.indptr, self.edges.indices, self.edges.data))
-
+		
 		self.encoded = True
 
 		return
