@@ -62,6 +62,7 @@ class CommonTsetlinMachine():
 		self.max_included_literals = max_included_literals
 		self.boost_true_positive_feedback = boost_true_positive_feedback
 		self.append_negated = append_negated
+		self.depth = depth
 		self.grid = grid
 		self.block = block
 
