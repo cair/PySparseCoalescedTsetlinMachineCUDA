@@ -17,7 +17,7 @@ epochs = 250
 
 patch_size = 10
 
-X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+(X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
 X_train = np.where(X_train > 75, 1, 0)
 X_test = np.where(X_test > 75, 1, 0)
