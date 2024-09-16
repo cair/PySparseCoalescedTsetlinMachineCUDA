@@ -336,7 +336,7 @@ code_evaluate = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
-			int patch_chunks = (((number_of_nodes-1)/INT_SIZE + 1))
+			int patch_chunks = (((number_of_nodes-1)/INT_SIZE + 1));
 			unsigned int patch_filter;
 			if (patch_chunks % 32 != 0) {
 				patch_filter = (~(0xffffffff << (number_of_nodes % INT_SIZE)));
