@@ -198,7 +198,7 @@ code_update = """
 		}
 
 		// Evaluate example
-		__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int *class_sum, int *X)
+		__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -207,7 +207,7 @@ code_update = """
 				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
 				int clause_output;
-				for (int patch = 0; patch < PATCHES; ++patch) {
+				for (int patch = 0; patch < number_of_nodes; ++patch) {
 					clause_output = 1;
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
 						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
