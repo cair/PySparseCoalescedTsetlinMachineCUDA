@@ -1,4 +1,4 @@
-from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassConvolutionalTsetlinMachine2D
+#from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassConvolutionalTsetlinMachine2D
 
 import numpy as np
 from time import time
@@ -60,6 +60,8 @@ for i in range(X_train.shape[0]):
     graphs_train.add(image_graph)
 graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
+print(graphs_train.X.shape)
+
 print("Training data produced")
 
 graphs_test = Graphs()
@@ -83,7 +85,7 @@ print(graphs_train.node_count)
 f = open("mnist_%.1f_%d_%d_%d.txt" % (s, int(factor*2000), T,  patch_size), "w+")
 
 for e in range(ensembles):
-	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (19, 19, args.hypervector_size), (patch_size, patch_size))
+	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (19, 19, args.hypervector_size), (1, 1))
 
 	for i in range(epochs):
 	    start_training = time()
