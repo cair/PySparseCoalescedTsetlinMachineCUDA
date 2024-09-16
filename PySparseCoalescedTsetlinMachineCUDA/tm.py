@@ -148,8 +148,8 @@ class CommonTsetlinMachine():
 		cuda.memcpy_htod(self.ta_state_gpu, state[0])
 		cuda.memcpy_htod(self.clause_weights_gpu, state[1])
 
-		self.X_train = np.array([])
-		self.X_test = np.array([])
+		self.graphs_signature_train = np.array([])
+		self.graphs_signature_test = np.array([])
 
 		self.encoded_Y = np.array([])
 
@@ -281,7 +281,6 @@ class CommonTsetlinMachine():
 		if self.append_negated:
 			for p_chunk in range((self.number_of_patches-1)//32 + 1):
 				for k in range(self.number_of_features//2, self.number_of_features):
-					print(encoded_X.shape, p_chunk, k, ~np.uint32(0))
 					encoded_X_packed[p_chunk, k] = ~np.uint32(0)
 
 		encoded_X_packed = encoded_X_packed.reshape(-1)
