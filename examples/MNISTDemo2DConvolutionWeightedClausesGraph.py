@@ -83,7 +83,7 @@ print(graphs_train.node_count)
 f = open("mnist_%.1f_%d_%d_%d.txt" % (s, int(factor*2000), T,  patch_size), "w+")
 
 for e in range(ensembles):
-	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (1, 1, 1), (patch_size, patch_size))
+	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (19, 19, args.hypervector_size), (patch_size, patch_size))
 
 	for i in range(epochs):
 	    start_training = time()
