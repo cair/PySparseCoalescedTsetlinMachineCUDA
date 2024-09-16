@@ -90,6 +90,7 @@ class CommonTsetlinMachine():
 		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
 
 		self.initialized = False
+		self.initialized_score = False
 
 	def allocate_gpu_memory(self):
 		self.ta_state_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_ta_chunks*self.number_of_state_bits*4)
@@ -276,23 +277,32 @@ class CommonTsetlinMachine():
 			self._init(graphs)
 			self.prepare(g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, grid=self.grid, block=self.block)
 			cuda.Context.synchronize()
-		elif incremental == False:
-			self.prepare(g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, grid=self.grid, block=self.block)
-			cuda.Context.synchronize()
 
-		if not np.array_equal(self.graphs_signature_train, graphs.signature):
-			self.graphs_signature_train = graphs.signature
 			self.X_train_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
 			cuda.memcpy_htod(self.X_train_indptr_gpu, graphs.X.indptr)
 
 			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
 			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
 
-		if not np.array_equal(self.encoded_Y, encoded_Y):
-			self.encoded_Y = encoded_Y
-
 			self.encoded_Y_gpu = cuda.mem_alloc(encoded_Y.nbytes)
 			cuda.memcpy_htod(self.encoded_Y_gpu, encoded_Y)
+		elif incremental == False:
+			self.prepare(g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, grid=self.grid, block=self.block)
+			cuda.Context.synchronize()
+
+		# if not np.array_equal(self.graphs_signature_train, graphs.signature):
+		# 	self.graphs_signature_train = graphs.signature
+		# 	self.X_train_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
+		# 	cuda.memcpy_htod(self.X_train_indptr_gpu, graphs.X.indptr)
+
+		# 	self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
+		# 	cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
+
+		# if not np.array_equal(self.encoded_Y, encoded_Y):
+		# 	self.encoded_Y = encoded_Y
+
+		# 	self.encoded_Y_gpu = cuda.mem_alloc(encoded_Y.nbytes)
+		# 	cuda.memcpy_htod(self.encoded_Y_gpu, encoded_Y)
 
 	def _fit(self, graphs, encoded_Y, epochs=100, incremental=False):
 		self._init_fit(graphs, encoded_Y, incremental)
@@ -324,14 +334,14 @@ class CommonTsetlinMachine():
 			print("Error: Model not trained.")
 			sys.exit(-1)
 
-		if not np.array_equal(self.graphs_signature_test, graphs.signature):
-			self.graphs_signature_test = graphs.signature
-
+		if not self.initialized_score:
 			self.X_test_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
 			cuda.memcpy_htod(self.X_test_indptr_gpu, graphs.X.indptr)
 
 			self.X_test_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
 			cuda.memcpy_htod(self.X_test_indices_gpu, graphs.X.indices)
+
+			self.initialized_score = True
 
 		self.prepare_packed(
 			g.state,
