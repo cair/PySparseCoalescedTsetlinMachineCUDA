@@ -173,10 +173,8 @@ class CommonTsetlinMachine():
 
 #define NEGATIVE_CLAUSES %d
 
-#define PATCHES %d
-
 #define NUMBER_OF_EXAMPLES %d
-		""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.negative_clauses, self.number_of_patches, number_of_examples)
+		""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.negative_clauses, number_of_examples)
 
 		mod = SourceModule(parameters + kernels.code_header + kernels.code_transform, no_extern_c=True)
 		transform_gpu = mod.get_function("transform")
