@@ -57,8 +57,6 @@ for i in range(X_train.shape[0]):
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 for k in patch.nonzero()[0]:
                     image_graph.add_feature(node_id, str(k))
-                image_graph.add_feature(node_id, 'c:'+str(q))
-                image_graph.add_feature(node_id, 'r:'+str(r))
     graphs_train.add(image_graph)
 graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
@@ -75,8 +73,6 @@ for i in range(X_test.shape[0]):
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 for k in patch.nonzero()[0]:
                     image_graph.add_feature(node_id, str(k))
-                image_graph.add_feature(node_id, 'c:'+str(q))
-                image_graph.add_feature(node_id, 'r:'+str(r))
     graphs_test.add(image_graph)
 graphs_test.encode(hypervectors = graphs_train.hypervectors, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 
@@ -87,7 +83,7 @@ print(graphs_train.node_count)
 f = open("mnist_%.1f_%d_%d_%d.txt" % (s, int(factor*2000), T,  patch_size), "w+")
 
 for e in range(ensembles):
-	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (28, 28, 1), (patch_size, patch_size))
+	tm = MultiClassConvolutionalTsetlinMachine2D(int(factor*2000), T, s, (1, 1, 1), (patch_size, patch_size))
 
 	for i in range(epochs):
 	    start_training = time()
