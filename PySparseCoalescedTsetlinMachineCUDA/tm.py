@@ -251,7 +251,7 @@ class CommonTsetlinMachine():
 		self.update.prepare("PPPPPPi")
 
 		self.evaluate_update = mod_update.get_function("evaluate")
-		self.evaluate_update.prepare("PPPP")
+		self.evaluate_update.prepare("PPiPP")
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
@@ -324,7 +324,7 @@ class CommonTsetlinMachine():
 				#self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
 				cuda.Context.synchronize()
 
-				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu)
+				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.node_count[e]), self.class_sum_gpu, self.encoded_X_gpu)
 				cuda.Context.synchronize()
 
 				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
