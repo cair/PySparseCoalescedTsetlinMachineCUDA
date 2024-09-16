@@ -66,8 +66,8 @@ class CommonTsetlinMachine():
 		self.grid = grid
 		self.block = block
 
-		self.X_train = np.array([])
-		self.X_test = np.array([])
+		self.graphs_signature_train = np.array([])
+		self.graphs_signature_test = np.array([])
 		self.encoded_Y = np.array([])
 		
 		self.ta_state = np.array([])
