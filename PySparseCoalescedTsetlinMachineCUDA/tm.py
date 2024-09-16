@@ -96,11 +96,8 @@ class CommonTsetlinMachine():
 		self.clause_weights_gpu = cuda.mem_alloc(self.number_of_outputs*self.number_of_clauses*4)
 		self.class_sum_gpu = cuda.mem_alloc(self.number_of_outputs*4)
 
-		self.included_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_literals*2*4) # Contains index and state of included literals per clause, none at start
+		self.included_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_literals*4) # Contains index of included literals per clause, none at start
 		self.included_literals_length_gpu = cuda.mem_alloc(self.number_of_clauses*4) # Number of included literals per clause
-
-		self.excluded_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_literals*2*4) # Contains index and state of excluded literals per clause
-		self.excluded_literals_length_gpu = cuda.mem_alloc(self.number_of_clauses*4) # Number of excluded literals per clause
 
 	def ta_action(self, clause, ta):
 		if np.array_equal(self.ta_state, np.array([])):
@@ -337,7 +334,14 @@ class CommonTsetlinMachine():
 			self.X_test_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
 			cuda.memcpy_htod(self.X_test_indices_gpu, graphs.X.indices)
 
-		self.prepare_packed(g.state, self.ta_state_gpu, self.included_literals_gpu, self.included_literals_length_gpu, self.excluded_literals_gpu, self.excluded_literals_length_gpu, grid=self.grid, block=self.block)
+		self.prepare_packed(
+			g.state,
+			self.ta_state_gpu,
+			self.included_literals_gpu,
+			self.included_literals_length_gpu,
+			grid=self.grid,
+			block=self.block
+		)
 		cuda.Context.synchronize()
         
 		class_sum = np.zeros((graphs.X.shape[0], self.number_of_outputs), dtype=np.int32)
@@ -352,8 +356,6 @@ class CommonTsetlinMachine():
 				self.block,
 				self.included_literals_gpu,
 				self.included_literals_length_gpu,
-				self.excluded_literals_gpu,
-				self.excluded_literals_length_gpu,
 				self.clause_weights_gpu,
 				np.int32(graphs.node_count[e]),
 				self.class_sum_gpu,
