@@ -102,14 +102,14 @@ code_update = """
 			} 
 		}
 
-		__device__ inline void calculate_clause_output(curandState *localState, unsigned int *ta_state, unsigned int *clause_output, int *clause_patch, int *X)
+		__device__ inline void calculate_clause_output(curandState *localState, unsigned int *ta_state, int number_of_nodes, unsigned int *clause_output, int *clause_patch, int *X)
 		{
 			int output_one_patch_count = 0;
 			*clause_patch = -1;
 			*clause_output = 0;
 
 			// Evaluate each patch (convolution)
-			for (int patch = 0; patch < PATCHES; ++patch) {
+			for (int patch = 0; patch < number_of_nodes; ++patch) {
 				int patch_clause_output = 1;
 				for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
 					if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
@@ -233,7 +233,7 @@ code_update = """
 		}
 
 		// Update state of Tsetlin Automata team
-		__global__ void update(curandState *state, unsigned int *global_ta_state, int *clause_weights, int *class_sum, int *X, int *y, int example)
+		__global__ void update(curandState *state, unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int *y, int example)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -247,7 +247,7 @@ code_update = """
 
 				unsigned int clause_output;
 				int clause_patch;
-				calculate_clause_output(&localState, ta_state, &clause_output, &clause_patch, X);
+				calculate_clause_output(&localState, ta_state, number_of_nodes, &clause_output, &clause_patch, X);
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
@@ -294,7 +294,7 @@ code_evaluate = """
 				}
 
 				int clause_output;
-				for (int patch = 0; patch < PATCHES; ++patch) {
+				for (int patch = 0; patch < number_of_nodes; ++patch) {
 					clause_output = 1;
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
 						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
