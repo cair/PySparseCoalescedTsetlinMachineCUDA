@@ -371,7 +371,7 @@ class CommonTsetlinMachine():
 				self.excluded_literals_gpu,
 				self.excluded_literals_length_gpu,
 				self.clause_weights_gpu,
-				np.int32(gaphs.node_count[e]),
+				np.int32(graphs.node_count[e]),
 				self.class_sum_gpu,
 				self.encoded_X_packed_gpu
 			)
