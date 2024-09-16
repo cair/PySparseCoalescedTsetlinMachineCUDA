@@ -241,7 +241,7 @@ class CommonTsetlinMachine():
 		self.evaluate.prepare("PPiPP")
 
 		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
-		self.evaluate_packed.prepare("PPPPPiPP")
+		self.evaluate_packed.prepare("PPPiPP")
 
 		encoded_X = np.zeros((self.number_of_patches, self.number_of_ta_chunks), dtype=np.uint32)
 		for patch_coordinate_y in range(self.dim[1] - self.patch_dim[1] + 1):
