@@ -4,6 +4,7 @@ import numpy as np
 from time import time
 from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs, Graph
 import argparse
+from skimage.util.shape import view_as_windows
 
 from keras.datasets import mnist
 
