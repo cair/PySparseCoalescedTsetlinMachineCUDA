@@ -198,6 +198,7 @@ class CommonTsetlinMachine():
 			transform_gpu(
 				self.included_literals_gpu,
 				self.included_literals_length_gpu,
+				np.int32(graphs.node_count[e]),
 				self.encoded_X_packed_gpu,
 				X_transformed_gpu,
 				grid=self.grid,
