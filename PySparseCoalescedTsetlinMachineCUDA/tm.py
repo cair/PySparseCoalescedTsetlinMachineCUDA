@@ -96,10 +96,10 @@ class CommonTsetlinMachine():
 		self.clause_weights_gpu = cuda.mem_alloc(self.number_of_outputs*self.number_of_clauses*4)
 		self.class_sum_gpu = cuda.mem_alloc(self.number_of_outputs*4)
 
-		self.included_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_features*2*4) # Contains index and state of included literals per clause, none at start
+		self.included_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_literals*2*4) # Contains index and state of included literals per clause, none at start
 		self.included_literals_length_gpu = cuda.mem_alloc(self.number_of_clauses*4) # Number of included literals per clause
 
-		self.excluded_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_features*2*4) # Contains index and state of excluded literals per clause
+		self.excluded_literals_gpu = cuda.mem_alloc(self.number_of_clauses*self.number_of_literals*2*4) # Contains index and state of excluded literals per clause
 		self.excluded_literals_length_gpu = cuda.mem_alloc(self.number_of_clauses*4) # Number of excluded literals per clause
 
 	def ta_action(self, clause, ta):
@@ -116,12 +116,12 @@ class CommonTsetlinMachine():
 			cuda.memcpy_dtoh(self.ta_state, self.ta_state_gpu)
 			self.clause_weights = np.empty(self.number_of_outputs*self.number_of_clauses, dtype=np.int32)
 			cuda.memcpy_dtoh(self.clause_weights, self.clause_weights_gpu)
-		return((self.ta_state, self.clause_weights, self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.dim, self.patch_dim, self.number_of_patches, self.number_of_state_bits, self.number_of_ta_chunks, self.append_negated, self.min_y, self.max_y))
+		return((self.ta_state, self.clause_weights, self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.dim, self.patch_dim, self.number_of_patches, self.number_of_state_bits, self.number_of_ta_chunks, self.append_negated, self.min_y, self.max_y))
 
 	def set_state(self, state):
 		self.number_of_outputs = state[2]
 		self.number_of_clauses = state[3]
-		self.number_of_features = state[4]
+		self.number_of_literals = state[4]
 		self.dim = state[5]
 		self.patch_dim = state[6]
 		self.number_of_patches = state[7]
@@ -162,7 +162,7 @@ class CommonTsetlinMachine():
 #define NEGATIVE_CLAUSES %d
 
 #define NUMBER_OF_EXAMPLES %d
-		""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.negative_clauses, number_of_examples)
+		""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.negative_clauses, number_of_examples)
 
 		mod = SourceModule(parameters + kernels.code_header + kernels.code_transform, no_extern_c=True)
 		transform_gpu = mod.get_function("transform")
@@ -199,21 +199,22 @@ class CommonTsetlinMachine():
 		return csr_matrix(X_transformed)
 
 	def _init(self, graphs):
+		self.number_of_features = graphs.hypervector_size*self.depth
 		if self.append_negated:
-			self.number_of_features = graphs.hypervector_size*self.depth*2
+			self.number_of_literals = self.number_of_features*self.depth*2
 		else:
-			self.number_of_features = graphs.hypervector_size*self.depth
+			self.number_of_literals = self.number_of_features
 
 		if self.max_included_literals == None:
-			self.max_included_literals = self.number_of_features
+			self.max_included_literals = self.number_of_literals
 
 		self.number_of_patches = graphs.max_node_count
-		self.number_of_ta_chunks = int((self.number_of_features-1)/32 + 1)
+		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 		parameters = """
 #define CLASSES %d
 #define CLAUSES %d
-#define FEATURES %d
+#define LITERALS %d
 #define STATE_BITS %d
 #define BOOST_TRUE_POSITIVE_FEEDBACK %d
 #define S %f
@@ -223,7 +224,7 @@ class CommonTsetlinMachine():
 #define NEGATIVE_CLAUSES %d
 #define PATCHES %d
 #define NUMBER_OF_EXAMPLES %d
-""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, self.number_of_patches, graphs.X.shape[0])
+""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, self.number_of_patches, graphs.X.shape[0])
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
@@ -251,7 +252,7 @@ class CommonTsetlinMachine():
 				p = patch_coordinate_y * (self.dim[0] - self.patch_dim[0] + 1) + patch_coordinate_x
 
 				if self.append_negated:
-					for k in range(self.number_of_features//2, self.number_of_features):
+					for k in range(self.number_of_literals//2, self.number_of_literals):
 						chunk = k // 32
 						pos = k % 32
 						encoded_X[p, chunk] |= (1 << pos)
@@ -262,10 +263,10 @@ class CommonTsetlinMachine():
 
 		# Encoded X packed
 
-		encoded_X_packed = np.zeros(((self.number_of_patches-1)//32 + 1, self.number_of_features), dtype=np.uint32)
+		encoded_X_packed = np.zeros(((self.number_of_patches-1)//32 + 1, self.number_of_literals), dtype=np.uint32)
 		if self.append_negated:
 			for p_chunk in range((self.number_of_patches-1)//32 + 1):
-				for k in range(self.number_of_features//2, self.number_of_features):
+				for k in range(self.number_of_literals//2, self.number_of_literals):
 					encoded_X_packed[p_chunk, k] = ~np.uint32(0)
 
 		encoded_X_packed = encoded_X_packed.reshape(-1)

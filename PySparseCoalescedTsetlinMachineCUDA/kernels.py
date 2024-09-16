@@ -26,11 +26,11 @@ code_header = """
 	
 	#define INT_SIZE 32
 
-	#define LA_CHUNKS (((FEATURES-1)/INT_SIZE + 1))
+	#define LA_CHUNKS (((LITERALS-1)/INT_SIZE + 1))
 	#define CLAUSE_CHUNKS ((CLAUSES-1)/INT_SIZE + 1)
 
-	#if (FEATURES % 32 != 0)
-	#define FILTER (~(0xffffffff << (FEATURES % INT_SIZE)))
+	#if (LITERALS % 32 != 0)
+	#define FILTER (~(0xffffffff << (LITERALS % INT_SIZE)))
 	#else
 	#define FILTER 0xffffffff
 	#endif
@@ -347,7 +347,7 @@ code_evaluate = """
 				for (int patch_chunk = 0; patch_chunk < patch_chunks-1; ++patch_chunk) {
 					clause_output = (~(0U));
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[patch_chunk*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
+						clause_output &= X[patch_chunk*LITERALS + included_literals[clause*LITERALS*2 + literal*2]];
 					}
 
 					if (clause_output) {
@@ -358,7 +358,7 @@ code_evaluate = """
 				if (!clause_output) {
 					clause_output = patch_filter;
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[(patch_chunks-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
+						clause_output &= X[(patch_chunks-1)*LITERALS + included_literals[clause*LITERALS*2 + literal*2]];
 					}
 				}
 
@@ -422,12 +422,12 @@ code_prepare = """
 				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
 				included_literals_length[clause] = 0;
-				for (int literal = 0; literal < FEATURES; ++literal) {
+				for (int literal = 0; literal < LITERALS; ++literal) {
 					int chunk = literal / INT_SIZE;
 					int pos = literal % INT_SIZE;
 
 					if ((ta_state[chunk*STATE_BITS + STATE_BITS - 1] & (1U << pos)) > 0) {
-						included_literals[clause*FEATURES*2 + included_literals_length[clause]*2] = literal;
+						included_literals[clause*LITERALS*2 + included_literals_length[clause]*2] = literal;
 						included_literals_length[clause]++;
 					}
 				}
@@ -748,7 +748,7 @@ code_transform = """
 				for (int patch_chunk = 0; patch_chunk < patch_chunks-1; ++patch_chunk) {
 					clause_output = (~(0U));
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[patch_chunk*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
+						clause_output &= X[patch_chunk*LITERALS + included_literals[clause*LITERALS*2 + literal*2]];
 					}
 
 					if (clause_output) {
@@ -759,7 +759,7 @@ code_transform = """
 				if (!clause_output) {
 					clause_output = patch_filter;
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[(PATCH_CHUNKS-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
+						clause_output &= X[(PATCH_CHUNKS-1)*LITERALS + included_literals[clause*LITERALS*2 + literal*2]];
 					}
 				}
 
