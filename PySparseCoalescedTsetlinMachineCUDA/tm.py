@@ -255,10 +255,10 @@ class CommonTsetlinMachine():
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
-		self.evaluate.prepare("PPPP")
+		self.evaluate.prepare("PPiPP")
 
 		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
-		self.evaluate_packed.prepare("PPPPPPP")
+		self.evaluate_packed.prepare("PPPPPiPP")
 
 		encoded_X = np.zeros((self.number_of_patches, self.number_of_ta_chunks), dtype=np.uint32)
 		for patch_coordinate_y in range(self.dim[1] - self.patch_dim[1] + 1):
@@ -371,6 +371,7 @@ class CommonTsetlinMachine():
 				self.excluded_literals_gpu,
 				self.excluded_literals_length_gpu,
 				self.clause_weights_gpu,
+				np.int32(gaphs.node_count[e]),
 				self.class_sum_gpu,
 				self.encoded_X_packed_gpu
 			)
