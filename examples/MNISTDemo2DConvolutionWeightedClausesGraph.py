@@ -2,7 +2,7 @@ from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassConvolutionalTsetli
 
 import numpy as np
 from time import time
-from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs
+from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs, Graph
 import argparse
 
 from keras.datasets import mnist
