@@ -75,6 +75,8 @@ for i in range(args.number_of_examples):
 
 graphs_test.encode()
 
+print(graphs_test.hypervectors)
+
 tm = MultiClassGraphTsetlinMachine(args.number_of_clauses, args.T, args.s, (1, args.max_sequence_length, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
 for i in range(args.epochs):
