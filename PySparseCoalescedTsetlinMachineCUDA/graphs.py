@@ -51,7 +51,7 @@ class Graphs():
 		else:
 			self.number_of_symbols = init_with.number_of_symbols
 			self.hypervectors = init_with.hypervectors
-			self.hypervector_size = init_with.hypervectors_size
+			self.hypervector_size = init_with.hypervector_size
 			self.hypervector_bits = init_with.hypervector_bits
 
 	def set_number_edges(self, graph, node, number_of_edges):
