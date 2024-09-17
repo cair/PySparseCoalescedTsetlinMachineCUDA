@@ -1,7 +1,7 @@
 from PySparseCoalescedTsetlinMachineCUDA.graphs import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
-from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
+#from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
 from time import time
 import argparse
 
@@ -54,7 +54,7 @@ graphs_train.encode()
 
 print(graphs_train.hypervectors)
 
-graphs_test = Graphs(number_of_nodes, 2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_test = Graphs(number_of_nodes, 2, hypervectors=graphs_train.hypervectors)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
