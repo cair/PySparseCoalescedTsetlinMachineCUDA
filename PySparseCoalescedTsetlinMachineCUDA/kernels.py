@@ -267,7 +267,13 @@ code_evaluate = """
     extern "C"
     {
         // Evaluate examples
-        __global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example)
+        __global__ void evaluate(
+            unsigned int *global_ta_state,
+            int *clause_weights,
+            int number_of_nodes,
+            int *class_sum,
+            int *X,
+            int example)
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
