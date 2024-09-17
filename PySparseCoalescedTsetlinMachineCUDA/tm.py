@@ -233,11 +233,11 @@ class CommonTsetlinMachine():
 		self.update.prepare("PPPiPPPi")
 
 		self.evaluate_update = mod_update.get_function("evaluate")
-		self.evaluate_update.prepare("PPiPPii")
+		self.evaluate_update.prepare("PPiPPi")
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
-		self.evaluate.prepare("PPiPPii")
+		self.evaluate.prepare("PPiPPi")
 
 #		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
 #		self.evaluate_packed.prepare("PPPiPP")
@@ -312,8 +312,7 @@ class CommonTsetlinMachine():
 					np.int32(graphs.number_of_nodes[e]),
 					self.class_sum_gpu,
 					self.encoded_X_train_gpu,
-					np.int32(e),
-					graphs.Y[e]
+					np.int32(e)
 				)
 				cuda.Context.synchronize()
 
@@ -381,8 +380,7 @@ class CommonTsetlinMachine():
 				np.int32(graphs.number_of_nodes[e]),
 				self.class_sum_gpu,
 				self.encoded_X_test_gpu,
-				np.int32(e),
-				np.int32(graphs.Y[e])
+				np.int32(e)
 			)
 			cuda.Context.synchronize()
 
