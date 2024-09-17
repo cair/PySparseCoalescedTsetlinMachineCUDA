@@ -274,7 +274,7 @@ code_evaluate = """
             int *class_sum,
             int *X,
             int example,
-            int class
+            int y
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -286,7 +286,7 @@ code_evaluate = """
 
             X = &X[example * LA_CHUNKS * number_of_nodes];
     
-            printf("%d:", class);
+            printf("%d:", y);
             for (int k = 0; k < LITERALS; ++k) {
                 int chunk = k / 32;
                 int pos = k % 32;
