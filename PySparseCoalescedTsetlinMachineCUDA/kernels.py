@@ -279,6 +279,10 @@ code_evaluate = """
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
+            if (index !=0 ) {
+                return;
+            }
+
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
             for (int k = 0; k < LITERALS; ++k) {
@@ -290,11 +294,11 @@ code_evaluate = """
                 } else {
                     printf("0 ");
                 }
-
-                printf("\\n");
             }
+            
+            printf("\\n");
 
-            for (int clause = index; clause < CLAUSES; clause += stride) {
+            for (int clause = 0; clause < CLAUSES; ++clause) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 int all_exclude = 1;
