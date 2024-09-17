@@ -1,7 +1,7 @@
 from PySparseCoalescedTsetlinMachineCUDA.graphs import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
-#from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
+from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
 from time import time
 import argparse
 
