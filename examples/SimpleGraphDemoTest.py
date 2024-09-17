@@ -39,7 +39,6 @@ for i in range(args.number_of_examples):
     feature_pos = np.random.randint(args.max_sequence_length)
     for j in range(args.max_sequence_length):
         if feature_pos == j:
-            print("Y:", Y_train[i], end=':')
             if Y_train[i] == 0:
                 graphs_train.add_node_feature(i, j, 0)
             else:
@@ -54,19 +53,6 @@ for i in range(args.number_of_examples):
 
 graphs_train.encode()
 
-for i in range(args.number_of_examples):
-    print(Y_train[i], end=':')
-    for k in range(graphs_train.hypervector_size*2):
-        chunk = k // 32
-        pos = k % 32
-        if graphs_train.X[i*args.max_sequence_length, chunk] & (1 << pos):
-            print(" 1", end='')
-        else:
-            print(" 0", end='')
-    print()
-
-print(graphs_train.hypervectors)
-vfvfd
 graphs_test = Graphs(number_of_nodes, init_with=graphs_train)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
