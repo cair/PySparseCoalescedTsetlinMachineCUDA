@@ -59,7 +59,7 @@ class Graphs():
 
 #	@staticmethod
 #	@jit(nopython=True)
-	def _add_node_feature(hypervectors, hypervector_size, graph_index, node, symbol, X):
+	def _add_node_feature(self, hypervectors, hypervector_size, graph_index, node, symbol, X):
 		for k in hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
