@@ -372,6 +372,8 @@ class CommonTsetlinMachine():
 			# 	self.encoded_X_packed_gpu
 			# )
 
+			print("CLASS", graphs.Y[e])
+
 			self.evaluate.prepared_call(
 				self.grid,
 				self.block,
