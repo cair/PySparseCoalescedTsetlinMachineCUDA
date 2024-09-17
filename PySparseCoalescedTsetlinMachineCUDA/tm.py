@@ -362,8 +362,6 @@ class CommonTsetlinMachine():
 			# 	self.class_sum_gpu,
 			# 	self.encoded_X_packed_gpu
 			# )
-					__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X)
-
 
 			self.evaluate.prepared_call(
 				self.grid,
