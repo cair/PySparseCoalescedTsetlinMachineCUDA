@@ -68,7 +68,7 @@ class Graphs():
 			X[graph_index + node, chunk] &= ~(1 << pos)
 
 	def add_node_feature(self, graph, node, symbol):
-		self._add_node_feature(self.hypervectors, self.hypervector_size, self.graph_index[graph], node, symbol, self.X)
+		self._add_node_feature(self.hypervectors, self.hypervector_size, self.node_index[graph], node, symbol, self.X)
 
 	def encode(self):
 		m = hashlib.sha256()
