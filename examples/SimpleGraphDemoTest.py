@@ -43,11 +43,6 @@ for i in range(args.number_of_examples):
                 graphs_train.add_node_feature(i, j, 0)
             else:
                 graphs_train.add_node_feature(i, j, 1)
- #       else:
- #           if np.random.randint(2) == 0:
- #               graphs_train.add_node_feature(i, j, 0)
- #           else:
- #               graphs_train.add_node_feature(i, j, 1)
    
 #Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
@@ -67,12 +62,7 @@ for i in range(args.number_of_examples):
                 graphs_test.add_node_feature(i, j, 0)
             else:
                 graphs_test.add_node_feature(i, j, 1)
-#        else:
-#            if np.random.randint(2) == 0:
- #               graphs_test.add_node_feature(i, j, 0)
- #           else:
- #               graphs_test.add_node_feature(i, j, 1)
-
+                
 graphs_test.encode()
 
 print(graphs_test.hypervectors)
