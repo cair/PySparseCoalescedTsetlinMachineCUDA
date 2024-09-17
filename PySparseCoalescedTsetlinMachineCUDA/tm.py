@@ -283,7 +283,7 @@ class CommonTsetlinMachine():
 			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
 			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
 
-			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.max_node_count, np.int32(self.append_negated))
+			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(graphs.X.shape[0]), np.int32(graphs.hypervector_size), graphs.max_node_count, np.int32(self.append_negated))
 			cuda.Context.synchronize()
 
 		if not np.array_equal(self.encoded_Y, encoded_Y):
