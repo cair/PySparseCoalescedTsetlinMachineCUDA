@@ -80,11 +80,11 @@ class CommonTsetlinMachine():
 		self.restore = mod_encode.get_function("restore")
 		self.restore.prepare("PPPiiii")
 
-		self.encode_packed = mod_encode.get_function("encode_packed")
-		self.encode_packed.prepare("PPPiiii")
+		#self.encode_packed = mod_encode.get_function("encode_packed")
+		#self.encode_packed.prepare("PPPiiii")
 
-		self.restore_packed = mod_encode.get_function("restore_packed")
-		self.restore_packed.prepare("PPPiiii")
+		#self.restore_packed = mod_encode.get_function("restore_packed")
+		#self.restore_packed.prepare("PPPiiii")
 
 		self.produce_autoencoder_examples= mod_encode.get_function("produce_autoencoder_example")
 		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
@@ -224,7 +224,7 @@ class CommonTsetlinMachine():
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
-		self.prepare_packed = mod_prepare.get_function("prepare_packed")
+		#self.prepare_packed = mod_prepare.get_function("prepare_packed")
 
 		self.allocate_gpu_memory()
 
@@ -304,10 +304,10 @@ class CommonTsetlinMachine():
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
-				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_gpu, np.int32(e))
+				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_train_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
+				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_train_gpu, self.encoded_Y_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
 #				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), np.int32(graphs.number_of_nodes[e]), np.int32(self.append_negated))
@@ -335,15 +335,15 @@ class CommonTsetlinMachine():
 			self.encoded_X_test_gpu = cuda.mem_alloc(graphs.X.nbytes)
 			cuda.memcpy_htod(self.encoded_X_test_gpu, graphs.X)
 
-		self.prepare_packed(
-			g.state,
-			self.ta_state_gpu,
-			self.included_literals_gpu,
-			self.included_literals_length_gpu,
-			grid=self.grid,
-			block=self.block
-		)
-		cuda.Context.synchronize()
+		#self.prepare_packed(
+		#	g.state,
+		#	self.ta_state_gpu,
+		#	self.included_literals_gpu,
+		#	self.included_literals_length_gpu,
+		#	grid=self.grid,
+		#	block=self.block
+		#)
+		#cuda.Context.synchronize()
         
 		class_sum = np.zeros((graphs.X.shape[0], self.number_of_outputs), dtype=np.int32)
 		for e in range(graphs.X.shape[0]):
@@ -370,14 +370,13 @@ class CommonTsetlinMachine():
 				self.clause_weights_gpu,
 				np.int32(graphs.number_of_node[e]),
 				self.class_sum_gpu,
-				self.encoded_X_gpu,
+				self.encoded_X_test_gpu,
 				np.int32(e)
 			)
-
 			cuda.Context.synchronize()
 
-			self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
-			cuda.Context.synchronize()
+			#self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
+			#cuda.Context.synchronize()
 
 			cuda.memcpy_dtoh(class_sum[e,:], self.class_sum_gpu)
 
@@ -717,7 +716,7 @@ class AutoEncoderTsetlinMachine(CommonTsetlinMachine):
                                             self.X_train_csc_indptr_gpu,
                                             self.X_train_csc_indices_gpu,
                                             X_csr.shape[1],
-                                            self.encoded_X_gpu,
+                                            self.encoded_X_train_gpu,
                                             self.encoded_Y_gpu,
                                             target,
                                             int(self.accumulation),
