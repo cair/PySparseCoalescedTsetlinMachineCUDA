@@ -36,18 +36,19 @@ for i in range(args.number_of_examples):
     # Select class
     Y_train[i] = np.random.randint(args.number_of_classes) 
 
+    feature_pos = np.random.randint(args.max_sequence_length)
     for j in range(args.max_sequence_length):
-        if np.random.randint(2) == 0:
-            graphs_train.add_node_feature(i, j, 0)
+        if feature_pos == j:
+            if Y_train[i] == 0:
+                graphs_train.add_node_feature(i, j, 0)
+            else:
+                graphs_train.add_node_feature(i, j, 1)
         else:
-            graphs_train.add_node_feature(i, j, 1)
-
-    j = np.random.randint(args.max_sequence_length)
-    if Y_train[i] == 0:
-        graphs_train.add_node_feature(i, j, 0)
-    else:
-        graphs_train.add_node_feature(i, j, 1)
-
+            if np.random.randint(2) == 0:
+                graphs_train.add_node_feature(i, j, 0)
+            else:
+                graphs_train.add_node_feature(i, j, 1)
+   
 Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
 graphs_train.encode()
@@ -61,17 +62,18 @@ for i in range(args.number_of_examples):
     # Select class
     Y_test[i] = np.random.randint(args.number_of_classes) 
 
+    feature_pos = np.random.randint(args.max_sequence_length)
     for j in range(args.max_sequence_length):
-        if np.random.randint(2) == 0:
-            graphs_test.add_node_feature(i, j, 0)
+        if feature_pos == j:
+            if Y_test[i] == 0:
+                graphs_test.add_node_feature(i, j, 0)
+            else:
+                graphs_test.add_node_feature(i, j, 1)
         else:
-            graphs_test.add_node_feature(i, j, 1)
-
-    j = np.random.randint(args.max_sequence_length)
-    if Y_test[i] == 0:
-        graphs_test.add_node_feature(i, j, 0)
-    else:
-        graphs_test.add_node_feature(i, j, 1)
+            if np.random.randint(2) == 0:
+                graphs_test.add_node_feature(i, j, 0)
+            else:
+                graphs_test.add_node_feature(i, j, 1)
 
 graphs_test.encode()
 
