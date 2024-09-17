@@ -1,5 +1,4 @@
-from PySparseCoalescedTsetlinMachineCUDA.graph import Graph
-from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs
+from PySparseCoalescedTsetlinMachineCUDA.graphs import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
 from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
