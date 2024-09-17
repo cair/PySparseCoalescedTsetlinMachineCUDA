@@ -62,9 +62,9 @@ class Graphs():
 	def set_number_edges(self, graph, node, number_of_edges):
 		self.number_of_edges[self.node_index[graph] + node] = number_of_edges
 
-#	@staticmethod
-#	@jit(nopython=True)
-	def _add_node_feature(self, hypervectors, hypervector_size, graph_index, node, symbol, X):
+	@staticmethod
+	@jit(nopython=True)
+	def _add_node_feature(hypervectors, hypervector_size, graph_index, node, symbol, X):
 		for k in hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
