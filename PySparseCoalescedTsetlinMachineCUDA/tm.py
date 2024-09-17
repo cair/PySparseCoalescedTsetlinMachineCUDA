@@ -220,7 +220,7 @@ class CommonTsetlinMachine():
 #define MAX_INCLUDED_LITERALS %d
 #define NEGATIVE_CLAUSES %d
 #define NUMBER_OF_EXAMPLES %d
-""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, graphs.X.shape[0])
+""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, graphs.number_of_nodes.shape[0])
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
@@ -242,7 +242,7 @@ class CommonTsetlinMachine():
 #		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
 #		self.evaluate_packed.prepare("PPPiPP")
 
-#		encoded_X = np.zeros((graphs.X.shape[0], graphs.max_number_of_nodes, self.number_of_ta_chunks), dtype=np.uint32)
+#		encoded_X = np.zeros((graphs.number_of_nodes.shape[0], graphs.max_number_of_nodes, self.number_of_ta_chunks), dtype=np.uint32)
 #		for k in range(self.number_of_literals//2, self.number_of_literals):
 #			chunk = k // 32
 #			pos = k % 32
@@ -284,7 +284,7 @@ class CommonTsetlinMachine():
 #			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
 #			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
 
-#			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(graphs.X.shape[0]), np.int32(graphs.hypervector_size), graphs.max_number_of_nodes, np.int32(self.append_negated))
+#			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(graphs.number_of_nodes.shape[0]), np.int32(graphs.hypervector_size), graphs.max_number_of_nodes, np.int32(self.append_negated))
 #			cuda.Context.synchronize()
 
 			self.encoded_X_train_gpu = cuda.mem_alloc(graphs.X.nbytes)
@@ -300,7 +300,7 @@ class CommonTsetlinMachine():
 		self._init_fit(graphs, encoded_Y, incremental)
 
 		for epoch in range(epochs):
-			for e in range(graphs.X.shape[0]):
+			for e in range(graphs.number_of_nodes.shape[0]):
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
@@ -345,8 +345,8 @@ class CommonTsetlinMachine():
 		#)
 		#cuda.Context.synchronize()
         
-		class_sum = np.zeros((graphs.X.shape[0], self.number_of_outputs), dtype=np.int32)
-		for e in range(graphs.X.shape[0]):
+		class_sum = np.zeros((graphs.number_of_nodes.shape[0], self.number_of_outputs), dtype=np.int32)
+		for e in range(graphs.number_of_nodes.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
 			#self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
