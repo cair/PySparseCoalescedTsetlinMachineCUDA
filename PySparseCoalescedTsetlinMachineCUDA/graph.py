@@ -20,8 +20,6 @@
 
 import numpy as np
 from scipy.sparse import coo_matrix
-import hashlib
-from time import time
 
 class Graph():
 	def __init__(self):
@@ -122,17 +120,12 @@ class Graphs():
 					local_edge_position += 1
 
 		self.X = coo_matrix((feature_data, (feature_row, feature_col))).tocsr()
-		self.X.sum_duplicates()
 		self.edges = coo_matrix((edge_data, (edge_row, edge_col))).tocsr()
 
 		self.max_node_count = self.node_count.max()
 
-		start = time()
-		self.signature = hashlib.sha256(self.X.indptr.data) + hashlib.sha256(self.X.indices.data) + hashlib.sha256(self.edges.indptr.data) + hashlib.sha256(self.edges.indices.data) + hashlib.sha256(self.edges.data.data)
-		stop = time()
+		self.signature = np.concatenate((self.X.indptr, self.X.indices, self.edges.indptr, self.edges.indices, self.edges.data))
 
-		print("HASH", stop-start)
-		
 		self.encoded = True
 
 		return

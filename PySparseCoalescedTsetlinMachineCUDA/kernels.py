@@ -190,10 +190,12 @@ code_update = """
 		}
 
 		// Evaluate example
-		__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X)
+		__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
+
+			X = &X[example * LA_CHUNKS * number_of_nodes];
 
 			for (int clause = index; clause < CLAUSES; clause += stride) {
 				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
@@ -234,6 +236,8 @@ code_update = """
 
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
+
+			X = &X[example * LA_CHUNKS * number_of_nodes];
 
 			// Calculate clause output first
 			for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
@@ -439,7 +443,7 @@ code_encode = """
 
 	extern "C"
     {
-		__global__ void encode(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int hypervector_size, int number_of_patches, int append_negated)
+		__global__ void encode(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int number_of_examples, int hypervector_size, int number_of_patches, int append_negated)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
@@ -453,25 +457,29 @@ code_encode = """
 				number_of_ta_chunks= (((number_of_features-1)/32 + 1));
 			}
 
-			unsigned int *indices = &X_indices[X_indptr[e]];
-			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
+			for (int e = 0; e < number_of_examples; ++e) {
+				unsigned int *indices = &X_indices[X_indptr[e]];
+				int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
 
-			for (int k = 0; k < number_of_indices; ++k) {
-				int patch = indices[k] / hypervector_size;
-				int feature = indices[k] % hypervector_size;
+				for (int k = 0; k < number_of_indices; ++k) {
+					int patch = indices[k] / hypervector_size;
+					int feature = indices[k] % hypervector_size;
 
-				if (patch >= index && ((patch - index) % stride) == 0) {
-					int chunk_nr = feature / 32;
-					int chunk_pos = feature % 32;
-					encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
+					if (patch >= index && ((patch - index) % stride) == 0) {
+						int chunk_nr = feature / 32;
+						int chunk_pos = feature % 32;
+						encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
 
-					if (append_negated) {
-						int chunk_nr = (feature + number_of_features) / 32;
-						int chunk_pos = (feature + number_of_features) % 32;
-						encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+						if (append_negated) {
+							int chunk_nr = (feature + number_of_features) / 32;
+							int chunk_pos = (feature + number_of_features) % 32;
+							encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
+						}
 					}
-				}
-		    }		
+			    }
+
+			    encoded_X += number_of_patches*number_of_ta_chunks;
+			}
 		}
 
 		__global__ void restore(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int hypervector_size, int number_of_patches, int append_negated)
