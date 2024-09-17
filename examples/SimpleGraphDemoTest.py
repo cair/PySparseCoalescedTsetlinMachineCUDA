@@ -1,5 +1,4 @@
-from PySparseCoalescedTsetlinMachineCUDA.graph import Graph
-from PySparseCoalescedTsetlinMachineCUDA.graph import Graphs
+from PySparseCoalescedTsetlinMachineCUDA.graphs import Graphs
 import numpy as np
 from scipy.sparse import csr_matrix
 from PySparseCoalescedTsetlinMachineCUDA.tm import MultiClassGraphTsetlinMachine
@@ -28,69 +27,53 @@ def default_args(**kwargs):
 
 args = default_args()
 
-graphs_train = Graphs()
+number_of_nodes = np.repeat(args.max_sequence_length, args.number_of_examples).astype(np.uint32)
+
+graphs_train = Graphs(number_of_nodes, 2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 Y_train = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
-    sequence_graph = Graph()
-    
     # Select class
     Y_train[i] = np.random.randint(args.number_of_classes) 
 
-    nodes = args.max_sequence_length
-    for j in range(nodes):
-        sequence_graph.add_node(j)
-
-    for k in range(nodes):
+    for j in range(args.max_sequence_length):
         if np.random.randint(2) == 0:
-            sequence_graph.add_feature(j, 'A')
+            graphs_train.add_node_feature(i, j, 0)
         else:
-            sequence_graph.add_feature(j, 'B')
+            graphs_train.add_node_feature(i, j, 1)
 
-    j = np.random.randint(nodes)
+    j = np.random.randint(args.max_sequence_length)
     if Y_train[i] == 0:
-        sequence_graph.add_feature(j, 'A')
+        graphs_train.add_node_feature(i, j, 0)
     else:
-        sequence_graph.add_feature(j, 'B')
-
-    graphs_train.add(sequence_graph)
+        graphs_train.add_node_feature(i, j, 1)
 
 Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
-graphs_train.encode(hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_train.encode()
 
 print(graphs_train.hypervectors)
-print(graphs_train.edge_type_id)
-print(graphs_train.node_count)
 
-graphs_test = Graphs()
+graphs_test = Graphs(number_of_nodes, 2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
-    sequence_graph = Graph()
-    
     # Select class
     Y_test[i] = np.random.randint(args.number_of_classes) 
 
-    nodes = args.max_sequence_length
-    for j in range(nodes):
-        sequence_graph.add_node(j)
-
-    for k in range(nodes):
+    for j in range(args.max_sequence_length):
         if np.random.randint(2) == 0:
-            sequence_graph.add_feature(j, 'A')
+            graphs_test.add_node_feature(i, j, 0)
         else:
-            sequence_graph.add_feature(j, 'B')
+            graphs_test.add_node_feature(i, j, 1)
 
-    j = np.random.randint(nodes)
+    j = np.random.randint(args.max_sequence_length)
     if Y_test[i] == 0:
-        sequence_graph.add_feature(j, 'A')
+        graphs_test.add_node_feature(i, j, 0)
     else:
-        sequence_graph.add_feature(j, 'B')
+        graphs_test.add_node_feature(i, j, 1)
 
-    graphs_test.add(sequence_graph)
-
-graphs_test.encode(hypervectors = graphs_train.hypervectors, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_test.encode()
 
 tm = MultiClassGraphTsetlinMachine(args.number_of_clauses, args.T, args.s, (1, args.max_sequence_length, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 

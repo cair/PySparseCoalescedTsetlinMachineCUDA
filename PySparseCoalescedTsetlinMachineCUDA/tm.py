@@ -174,13 +174,13 @@ class CommonTsetlinMachine():
 
 		X_transformed = np.empty((number_of_examples, self.number_of_clauses), dtype=np.uint32)
 		for e in range(number_of_examples):
-			self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+			self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
 			cuda.Context.synchronize()
 
 			transform_gpu(
 				self.included_literals_gpu,
 				self.included_literals_length_gpu,
-				np.int32(graphs.node_count[e]),
+				np.int32(graphs.number_of_nodes[e]),
 				self.encoded_X_packed_gpu,
 				X_transformed_gpu,
 				grid=self.grid,
@@ -190,7 +190,7 @@ class CommonTsetlinMachine():
 
 			cuda.memcpy_dtoh(X_transformed[e,:], X_transformed_gpu)
 
-			self.restore_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+			self.restore_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
 			cuda.Context.synchronize()
 		
 		return csr_matrix(X_transformed)
@@ -205,7 +205,7 @@ class CommonTsetlinMachine():
 		if self.max_included_literals == None:
 			self.max_included_literals = self.number_of_literals
 
-		self.number_of_nodes = graphs.max_node_count
+		self.number_of_nodes = graphs.max_number_of_nodes
 		self.number_of_ta_chunks = int((self.number_of_literals-1)/32 + 1)
 
 		parameters = """
@@ -237,32 +237,32 @@ class CommonTsetlinMachine():
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
-		self.evaluate.prepare("PPiPP")
+		self.evaluate.prepare("PPiPPi")
 
-		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
-		self.evaluate_packed.prepare("PPPiPP")
+#		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
+#		self.evaluate_packed.prepare("PPPiPP")
 
-		encoded_X = np.zeros((graphs.X.shape[0], graphs.max_node_count, self.number_of_ta_chunks), dtype=np.uint32)
-		for k in range(self.number_of_literals//2, self.number_of_literals):
-			chunk = k // 32
-			pos = k % 32
-			encoded_X[:,:, chunk] |= (1 << pos)
+#		encoded_X = np.zeros((graphs.X.shape[0], graphs.max_number_of_nodes, self.number_of_ta_chunks), dtype=np.uint32)
+#		for k in range(self.number_of_literals//2, self.number_of_literals):
+#			chunk = k // 32
+#			pos = k % 32
+#			encoded_X[:,:, chunk] |= (1 << pos)
 
-		encoded_X = encoded_X.reshape(-1)
-		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
-		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
+#		encoded_X = encoded_X.reshape(-1)
+#		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
+#		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
 
 		# Encoded X packed
 
-		encoded_X_packed = np.zeros(((self.number_of_nodes-1)//32 + 1, self.number_of_literals), dtype=np.uint32)
-		if self.append_negated:
-			for p_chunk in range((self.number_of_nodes-1)//32 + 1):
-				for k in range(self.number_of_literals//2, self.number_of_literals):
-					encoded_X_packed[p_chunk, k] = ~np.uint32(0)
-
-		encoded_X_packed = encoded_X_packed.reshape(-1)
-		self.encoded_X_packed_gpu = cuda.mem_alloc(encoded_X_packed.nbytes)
-		cuda.memcpy_htod(self.encoded_X_packed_gpu, encoded_X_packed)
+#		encoded_X_packed = np.zeros(((self.number_of_nodes-1)//32 + 1, self.number_of_literals), dtype=np.uint32)
+#		if self.append_negated:
+#			for p_chunk in range((self.number_of_nodes-1)//32 + 1):
+#				for k in range(self.number_of_literals//2, self.number_of_literals):
+#					encoded_X_packed[p_chunk, k] = ~np.uint32(0)
+#
+#		encoded_X_packed = encoded_X_packed.reshape(-1)
+#		self.encoded_X_packed_gpu = cuda.mem_alloc(encoded_X_packed.nbytes)
+#		cuda.memcpy_htod(self.encoded_X_packed_gpu, encoded_X_packed)
 
 		self.initialized = True
 
@@ -277,14 +277,18 @@ class CommonTsetlinMachine():
 
 		if not np.array_equal(self.graphs_signature_train, graphs.signature):
 			self.graphs_signature_train = graphs.signature
-			self.X_train_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
-			cuda.memcpy_htod(self.X_train_indptr_gpu, graphs.X.indptr)
+			
+#			self.X_train_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
+#			cuda.memcpy_htod(self.X_train_indptr_gpu, graphs.X.indptr)
 
-			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
-			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
+#			self.X_train_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
+#			cuda.memcpy_htod(self.X_train_indices_gpu, graphs.X.indices)
 
-			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(graphs.X.shape[0]), np.int32(graphs.hypervector_size), graphs.max_node_count, np.int32(self.append_negated))
-			cuda.Context.synchronize()
+#			self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(graphs.X.shape[0]), np.int32(graphs.hypervector_size), graphs.max_number_of_nodes, np.int32(self.append_negated))
+#			cuda.Context.synchronize()
+
+			self.encoded_X_train_gpu = cuda.mem_alloc(graphs.X.nbytes)
+			cuda.memcpy_htod(self.encoded_X_train_gpu, graphs.X)
 
 		if not np.array_equal(self.encoded_Y, encoded_Y):
 			self.encoded_Y = encoded_Y
@@ -300,13 +304,13 @@ class CommonTsetlinMachine():
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
-				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.node_count[e]), self.class_sum_gpu, self.encoded_X_gpu, np.int32(e))
+				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.node_count[e]), self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
+				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, np.int32(graphs.number_of_nodes[e]), self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-#				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), np.int32(graphs.node_count[e]), np.int32(self.append_negated))
+#				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(graphs.hypervector_size), np.int32(graphs.number_of_nodes[e]), np.int32(self.append_negated))
 #				cuda.Context.synchronize()
 
 		self.ta_state = np.array([])
@@ -322,11 +326,14 @@ class CommonTsetlinMachine():
 		if not np.array_equal(self.graphs_signature_test, graphs.signature):
 			self.graphs_signature_test = graphs.signature
 
-			self.X_test_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
-			cuda.memcpy_htod(self.X_test_indptr_gpu, graphs.X.indptr)
+#			self.X_test_indptr_gpu = cuda.mem_alloc(graphs.X.indptr.nbytes)
+#			cuda.memcpy_htod(self.X_test_indptr_gpu, graphs.X.indptr)
 
-			self.X_test_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
-			cuda.memcpy_htod(self.X_test_indices_gpu, graphs.X.indices)
+#			self.X_test_indices_gpu = cuda.mem_alloc(graphs.X.indices.nbytes)
+#			cuda.memcpy_htod(self.X_test_indices_gpu, graphs.X.indices)
+
+			self.encoded_X_test_gpu = cuda.mem_alloc(graphs.X.nbytes)
+			cuda.memcpy_htod(self.encoded_X_test_gpu, graphs.X)
 
 		self.prepare_packed(
 			g.state,
@@ -342,22 +349,36 @@ class CommonTsetlinMachine():
 		for e in range(graphs.X.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
-			self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
-			cuda.Context.synchronize()
+			#self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
+			#cuda.Context.synchronize()
 
-			self.evaluate_packed.prepared_call(
+			# self.evaluate_packed.prepared_call(
+			# 	self.grid,
+			# 	self.block,
+			# 	self.included_literals_gpu,
+			# 	self.included_literals_length_gpu,
+			# 	self.clause_weights_gpu,
+			# 	np.int32(graphs.number_of_nodes[e]),
+			# 	self.class_sum_gpu,
+			# 	self.encoded_X_packed_gpu
+			# )
+					__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X)
+
+
+			self.evaluate.prepared_call(
 				self.grid,
 				self.block,
-				self.included_literals_gpu,
-				self.included_literals_length_gpu,
+				self.ta_state_gpu,
 				self.clause_weights_gpu,
-				np.int32(graphs.node_count[e]),
+				np.int32(graphs.number_of_node[e]),
 				self.class_sum_gpu,
-				self.encoded_X_packed_gpu
+				self.encoded_X_gpu,
+				np.int32(e)
 			)
+
 			cuda.Context.synchronize()
 
-			self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.node_count[e], np.int32(self.append_negated))
+			self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(graphs.hypervector_size), graphs.number_of_nodes[e], np.int32(self.append_negated))
 			cuda.Context.synchronize()
 
 			cuda.memcpy_dtoh(class_sum[e,:], self.class_sum_gpu)
