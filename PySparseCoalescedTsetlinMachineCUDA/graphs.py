@@ -75,6 +75,8 @@ class Graphs():
 		m.update(self.X.data)
 		self.signature = m.digest()
 
+		self.X = self.X.reshape(-1)
+
 		self.encoded = True
 
 		return
