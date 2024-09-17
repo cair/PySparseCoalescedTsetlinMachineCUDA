@@ -273,7 +273,8 @@ code_evaluate = """
             int number_of_nodes,
             int *class_sum,
             int *X,
-            int example
+            int example,
+            int class
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -284,15 +285,16 @@ code_evaluate = """
             }
 
             X = &X[example * LA_CHUNKS * number_of_nodes];
-
+    
+            printf("%d:", class);
             for (int k = 0; k < LITERALS; ++k) {
                 int chunk = k / 32;
                 int pos = k % 32;
 
                 if (X[chunk] & (1 << pos)) {
-                    printf("1 ");
+                    printf(" 1");
                 } else {
-                    printf("0 ");
+                    printf(" 0");
                 }
             }
 
