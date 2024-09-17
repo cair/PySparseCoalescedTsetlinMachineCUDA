@@ -215,7 +215,7 @@ code_update = """
 
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
-            for (int clause = index; clause < CLAUSES; clause += stride) {
+            for (int clause = 0; clause < CLAUSES; clause += 1) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 int clause_output;
@@ -262,7 +262,7 @@ code_update = """
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
 
-            printf("(%d %d):", y[example*CLASSES + 0],  y[example*CLASSES + 0]);
+            printf("(%d %d):", y[example*CLASSES + 0],  y[example*CLASSES + 1]);
             for (int k = 0; k < LITERALS; ++k) {
                 int chunk = k / 32;
                 int pos = k % 32;
