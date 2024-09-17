@@ -56,19 +56,19 @@ class Graphs():
 		self.number_of_edges[self.node_index[graph] + node] = number_of_edges
 
 	@staticmethod
-    @jit(nopython=True)
-    def _add_node_feature(hypervectors, graph, node, symbol, X):
-		for k in self.hypervectors[symbol,:]:
+	@jit(nopython=True)
+	def _add_node_feature(hypervectors, hypervector_size, graph, node, symbol, X):
+		for k in hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
 			X[node, chunk] |= (1 << pos)
 
-			chunk = (k + self.hypervector_size) // 32
-			pos = (k + self.hypervector_size)  % 32
+			chunk = (k + hypervector_size) // 32
+			pos = (k + hypervector_size)  % 32
 			X[node, chunk] &= ~(1 << pos)
 
 	def add_node_feature(self, graph, node, symbol):
-		self._add_node_feature(self.hypervectors, graph, node, symbol, self.X)
+		self._add_node_feature(self.hypervectors, self.hypervector_size, graph, node, symbol, self.X)
 
 	def encode(self):
 		m = hashlib.sha256()
