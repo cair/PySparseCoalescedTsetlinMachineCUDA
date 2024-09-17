@@ -31,18 +31,10 @@ class Graphs():
 
 		self.number_of_edges = np.zeros(self.number_of_nodes.sum(), dtype=np.uint32)
 
-		self.hypervector_size = hypervector_size
-		self.hypervector_bits = hypervector_bits
-
-		self.number_of_hypervector_chunks = (self.hypervector_size*2 - 1) // 32 + 1
-
-		self.X = np.zeros((self.number_of_nodes.sum(), self.number_of_hypervector_chunks), dtype=np.uint32)
-		for k in range(self.hypervector_size, hypervector_size*2):
-			chunk = k // 32
-			pos = k % 32
-			self.X[:,chunk] |= (1 << pos)
-
 		if init_with == None:
+			self.hypervector_size = hypervector_size
+			self.hypervector_bits = hypervector_bits
+
 			self.number_of_symbols = number_of_symbols
 			indexes = np.arange(self.hypervector_size, dtype=np.uint32)
 			self.hypervectors = np.zeros((self.number_of_symbols, self.hypervector_bits), dtype=np.uint32)
@@ -53,6 +45,14 @@ class Graphs():
 			self.hypervectors = init_with.hypervectors
 			self.hypervector_size = init_with.hypervector_size
 			self.hypervector_bits = init_with.hypervector_bits
+
+		self.number_of_hypervector_chunks = (self.hypervector_size*2 - 1) // 32 + 1
+
+		self.X = np.zeros((self.number_of_nodes.sum(), self.number_of_hypervector_chunks), dtype=np.uint32)
+		for k in range(self.hypervector_size, hypervector_size*2):
+			chunk = k // 32
+			pos = k % 32
+			self.X[:,chunk] |= (1 << pos)
 
 	def set_number_edges(self, graph, node, number_of_edges):
 		self.number_of_edges[self.node_index[graph] + node] = number_of_edges
