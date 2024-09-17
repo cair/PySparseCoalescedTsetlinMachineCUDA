@@ -23,15 +23,13 @@ import hashlib
 from numba import jit
 
 class Graphs():
-	def __init__(self, number_of_nodes, number_of_symbols=None, hypervectors=None, hypervector_size=128, hypervector_bits=2):
+	def __init__(self, number_of_nodes, init_with=None, number_of_symbols=None, hypervector_size=128, hypervector_bits=2):
 		self.number_of_nodes = number_of_nodes
 		self.node_index = np.zeros(self.number_of_nodes.shape[0], dtype=np.uint32)
 		self.node_index[1:] = np.add.accumulate(self.number_of_nodes[:-1])
 		self.max_number_of_nodes = self.number_of_nodes.max()
 
 		self.number_of_edges = np.zeros(self.number_of_nodes.sum(), dtype=np.uint32)
-
-		self.number_of_symbols = number_of_symbols
 
 		self.hypervector_size = hypervector_size
 		self.hypervector_bits = hypervector_bits
@@ -44,13 +42,17 @@ class Graphs():
 			pos = k % 32
 			self.X[:,chunk] |= (1 << pos)
 
-		if hypervectors == None:
+		if init_with == None:
+			self.number_of_symbols = number_of_symbols
 			indexes = np.arange(self.hypervector_size, dtype=np.uint32)
 			self.hypervectors = np.zeros((self.number_of_symbols, self.hypervector_bits), dtype=np.uint32)
 			for i in range(self.number_of_symbols):
 				self.hypervectors[i,:] = np.random.choice(indexes, size=(self.hypervector_bits), replace=False)
 		else:
-			self.hypervectors = hypervectors
+			self.number_of_symbols = init_with.number_of_symbols
+			self.hypervectors = init_with.hypervectors
+			self.hypervector_size = init_with.hypervectors
+			self.hypervector_bits = init_with.hypervector_bits
 
 	def set_number_edges(self, graph, node, number_of_edges):
 		self.number_of_edges[self.node_index[graph] + node] = number_of_edges

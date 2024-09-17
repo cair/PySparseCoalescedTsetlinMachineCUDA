@@ -54,7 +54,7 @@ graphs_train.encode()
 
 print(graphs_train.hypervectors)
 
-graphs_test = Graphs(number_of_nodes, 2, hypervectors=graphs_train.hypervectors)
+graphs_test = Graphs(number_of_nodes, 2, init_with=graphs_train)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
