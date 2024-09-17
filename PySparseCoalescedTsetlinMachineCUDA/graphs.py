@@ -40,7 +40,6 @@ class Graphs():
 			self.hypervector_size = hypervector_size
 			self.hypervector_bits = hypervector_bits
 
-			self.number_of_symbols = number_of_symbols
 			indexes = np.arange(self.hypervector_size, dtype=np.uint32)
 			self.hypervectors = np.zeros((self.number_of_symbols, self.hypervector_bits), dtype=np.uint32)
 			for i in range(self.number_of_symbols):
