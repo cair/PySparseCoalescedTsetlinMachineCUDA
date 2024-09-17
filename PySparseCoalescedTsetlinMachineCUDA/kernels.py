@@ -265,7 +265,7 @@ code_update = """
 
 code_evaluate = """
 	extern "C"
-    {
+	{
 		// Evaluate examples
 		__global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example)
 		{
