@@ -53,9 +53,9 @@ for i in range(X_train.shape[0]):
                 node_id = q*19 + r
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 for k in patch.nonzero()[0]:
-                    image_graph.add_node_feature(i, node_id, k)
-                image_graph.add_node_feature(i, node_id, 'c:'+str(q))
-                image_graph.add_node_feature(i, node_id, 'r:'+str(r))
+                    graphs_train.add_node_feature(i, node_id, k)
+                graphs_train.add_node_feature(i, node_id, 'c:'+str(q))
+                graphs_train.add_node_feature(i, node_id, 'r:'+str(r))
 
 graphs_train.encode()
 
@@ -74,9 +74,9 @@ for i in range(X_test.shape[0]):
                 node_id = q*19 + r
                 patch = windows[q,r].reshape(-1).astype(np.uint32)
                 for k in patch.nonzero()[0]:
-                    image_graph.add_node_feature(i, node_id, k)
-                image_graph.add_node_feature(i, node_id, 'c:'+str(q))
-                image_graph.add_node_feature(i, node_id, 'r:'+str(r))
+                    graphs_test.add_node_feature(i, node_id, k)
+                graphs_test.add_node_feature(i, node_id, 'c:'+str(q))
+                graphs_test.add_node_feature(i, node_id, 'r:'+str(r))
 
 graphs_test.encode()
 
