@@ -190,32 +190,14 @@ code_update = """
         }
 
         // Evaluate example
-        __global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example, int y)
+        __global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example)
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
-            if (index != 0) {
-                return;
-            }
-
-            printf("%d:", y);
-            for (int k = 0; k < LITERALS; ++k) {
-                int chunk = k / 32;
-                int pos = k % 32;
-
-                if (X[chunk] & (1 << pos)) {
-                    printf(" 1");
-                } else {
-                    printf(" 0");
-                }
-            }
-
-            printf("\\n");
-
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
-            for (int clause = 0; clause < CLAUSES; clause += 1) {
+            for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 int clause_output;
@@ -255,29 +237,10 @@ code_update = """
             /* Copy state to local memory for efficiency */  
             curandState localState = state[index];
 
-            if (index != 0) {
-                return;
-            }
-
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
-
-            printf("(%d %d):", y[example*CLASSES + 0],  y[example*CLASSES + 1]);
-            for (int k = 0; k < LITERALS; ++k) {
-                int chunk = k / 32;
-                int pos = k % 32;
-
-                if (X[chunk] & (1 << pos)) {
-                    printf(" 1");
-                } else {
-                    printf(" 0");
-                }
-            }
-
-            printf("\\n");
-
             // Calculate clause output first
-            for (unsigned long long clause = 0; clause < CLAUSES; clause += 1) {
+            for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 unsigned int clause_output;
@@ -310,20 +273,15 @@ code_evaluate = """
             int number_of_nodes,
             int *class_sum,
             int *X,
-            int example,
-            int y
+            int example
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
-            if (index !=0 ) {
-                return;
-            }
-
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
-            for (int clause = 0; clause < CLAUSES; ++clause) {
+            for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 int all_exclude = 1;

@@ -63,6 +63,7 @@ class Graphs():
 		for k in hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
+
 			X[graph_index + node, chunk] |= (1 << pos)
 
 			chunk = (k + hypervector_size) // 32
@@ -77,7 +78,7 @@ class Graphs():
 		m.update(self.X.data)
 		self.signature = m.digest()
 
-		self.X = self.X.reshape(-1)
+		#self.X = self.X.reshape(-1)
 
 		self.encoded = True
 

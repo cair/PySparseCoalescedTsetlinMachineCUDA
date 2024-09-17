@@ -15,7 +15,7 @@ def default_args(**kwargs):
     parser.add_argument("--hypervector_bits", default=1, type=int)
     parser.add_argument("--noise", default=0.0, type=float)
     parser.add_argument("--number-of-examples", default=1000, type=int)
-    parser.add_argument("--max-sequence-length", default=1000, type=int)
+    parser.add_argument("--max-sequence-length", default=10, type=int)
     parser.add_argument("--number-of-classes", default=2, type=int)
     parser.add_argument("--max-included-literals", default=1, type=int)
 
@@ -39,22 +39,34 @@ for i in range(args.number_of_examples):
     feature_pos = np.random.randint(args.max_sequence_length)
     for j in range(args.max_sequence_length):
         if feature_pos == j:
+            print("Y:", Y_train[i], end=':')
             if Y_train[i] == 0:
                 graphs_train.add_node_feature(i, j, 0)
             else:
                 graphs_train.add_node_feature(i, j, 1)
-        else:
-            if np.random.randint(2) == 0:
-                graphs_train.add_node_feature(i, j, 0)
-            else:
-                graphs_train.add_node_feature(i, j, 1)
+ #       else:
+ #           if np.random.randint(2) == 0:
+ #               graphs_train.add_node_feature(i, j, 0)
+ #           else:
+ #               graphs_train.add_node_feature(i, j, 1)
    
-Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
+#Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
 graphs_train.encode()
 
-print(graphs_train.hypervectors)
+for i in range(args.number_of_examples):
+    print(Y_train[i], end=':')
+    for k in range(graphs_train.hypervector_size*2):
+        chunk = k // 32
+        pos = k % 32
+        if graphs_train.X[i*args.max_sequence_length, chunk] & (1 << pos):
+            print(" 1", end='')
+        else:
+            print(" 0", end='')
+    print()
 
+print(graphs_train.hypervectors)
+vfvfd
 graphs_test = Graphs(number_of_nodes, init_with=graphs_train)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
@@ -69,11 +81,11 @@ for i in range(args.number_of_examples):
                 graphs_test.add_node_feature(i, j, 0)
             else:
                 graphs_test.add_node_feature(i, j, 1)
-        else:
-            if np.random.randint(2) == 0:
-                graphs_test.add_node_feature(i, j, 0)
-            else:
-                graphs_test.add_node_feature(i, j, 1)
+#        else:
+#            if np.random.randint(2) == 0:
+ #               graphs_test.add_node_feature(i, j, 0)
+ #           else:
+ #               graphs_test.add_node_feature(i, j, 1)
 
 graphs_test.encode()
 
