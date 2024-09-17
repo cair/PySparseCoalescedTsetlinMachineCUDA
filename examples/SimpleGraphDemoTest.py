@@ -29,7 +29,7 @@ args = default_args()
 
 number_of_nodes = np.repeat(args.max_sequence_length, args.number_of_examples).astype(np.uint32)
 
-graphs_train = Graphs(number_of_nodes, number_of_symbols=2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_train = Graphs(number_of_nodes, symbols=['A', 'B'], hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 Y_train = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
@@ -40,9 +40,9 @@ for i in range(args.number_of_examples):
     for j in range(args.max_sequence_length):
         if feature_pos == j:
             if Y_train[i] == 0:
-                graphs_train.add_node_feature(i, j, 0)
+                graphs_train.add_node_feature(i, j, 'A')
             else:
-                graphs_train.add_node_feature(i, j, 1)
+                graphs_train.add_node_feature(i, j, 'B')
    
 Y_train = np.where(np.random.rand(args.number_of_examples) < args.noise, 1 - Y_train, Y_train)  # Adds noise
 
@@ -59,9 +59,9 @@ for i in range(args.number_of_examples):
     for j in range(args.max_sequence_length):
         if feature_pos == j:
             if Y_test[i] == 0:
-                graphs_test.add_node_feature(i, j, 0)
+                graphs_test.add_node_feature(i, j, 'A')
             else:
-                graphs_test.add_node_feature(i, j, 1)
+                graphs_test.add_node_feature(i, j, 'B')
 
 graphs_test.encode()
 

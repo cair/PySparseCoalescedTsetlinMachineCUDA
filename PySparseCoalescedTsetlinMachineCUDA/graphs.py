@@ -23,7 +23,7 @@ import hashlib
 #from numba import jit
 
 class Graphs():
-	def __init__(self, number_of_nodes, init_with=None, number_of_symbols=None, hypervector_size=128, hypervector_bits=2):
+	def __init__(self, number_of_nodes, init_with=None, symbols=None, hypervector_size=128, hypervector_bits=2):
 		self.number_of_nodes = number_of_nodes
 		self.node_index = np.zeros(self.number_of_nodes.shape[0], dtype=np.uint32)
 		self.node_index[1:] = np.add.accumulate(self.number_of_nodes[:-1])
@@ -32,6 +32,11 @@ class Graphs():
 		self.number_of_edges = np.zeros(self.number_of_nodes.sum(), dtype=np.uint32)
 
 		if init_with == None:
+			self.number_of_symbols = len(symbols)
+			self.symbol_id = {}
+			for symbol in symbols:
+				symbol_id[symbol] = len(symbol_id)
+
 			self.hypervector_size = hypervector_size
 			self.hypervector_bits = hypervector_bits
 
@@ -42,6 +47,7 @@ class Graphs():
 				self.hypervectors[i,:] = np.random.choice(indexes, size=(self.hypervector_bits), replace=False)
 		else:
 			self.number_of_symbols = init_with.number_of_symbols
+			self.symbol_id = init_with.symbol_id
 			self.hypervectors = init_with.hypervectors
 			self.hypervector_size = init_with.hypervector_size
 			self.hypervector_bits = init_with.hypervector_bits
@@ -71,7 +77,7 @@ class Graphs():
 			X[graph_index + node, chunk] &= ~(1 << pos)
 
 	def add_node_feature(self, graph, node, symbol):
-		self._add_node_feature(self.hypervectors, self.hypervector_size, self.node_index[graph], node, symbol, self.X)
+		self._add_node_feature(self.hypervectors, self.hypervector_size, self.node_index[graph], node, self.symbol_id[symbol], self.X)
 
 	def encode(self):
 		m = hashlib.sha256()
