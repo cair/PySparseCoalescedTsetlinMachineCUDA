@@ -35,7 +35,7 @@ class Graphs():
 			self.number_of_symbols = len(symbols)
 			self.symbol_id = {}
 			for symbol in symbols:
-				symbol_id[symbol] = len(symbol_id)
+				self.symbol_id[symbol] = len(self.symbol_id)
 
 			self.hypervector_size = hypervector_size
 			self.hypervector_bits = hypervector_bits
