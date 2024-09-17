@@ -20,7 +20,7 @@
 
 import numpy as np
 import hashlib
-#from numba import jit
+from numba import jit
 
 class Graphs():
 	def __init__(self, number_of_nodes, init_with=None, symbols=None, hypervector_size=128, hypervector_bits=2):
