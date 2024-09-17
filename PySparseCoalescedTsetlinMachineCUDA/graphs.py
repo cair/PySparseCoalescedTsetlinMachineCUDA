@@ -20,6 +20,7 @@
 
 import numpy as np
 import hashlib
+from numba import jit
 
 class Graphs():
 	def __init__(self, number_of_nodes, number_of_symbols=None, hypervectors=None, hypervector_size=128, hypervector_bits=2):
@@ -54,15 +55,20 @@ class Graphs():
 	def set_number_edges(self, graph, node, number_of_edges):
 		self.number_of_edges[self.node_index[graph] + node] = number_of_edges
 
-	def add_node_feature(self, graph, node, symbol):
+	@staticmethod
+    @jit(nopython=True)
+    def _add_node_feature(hypervectors, graph, node, symbol, X):
 		for k in self.hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
-			self.X[node, chunk] |= (1 << pos)
+			X[node, chunk] |= (1 << pos)
 
 			chunk = (k + self.hypervector_size) // 32
 			pos = (k + self.hypervector_size)  % 32
-			self.X[node, chunk] &= ~(1 << pos)
+			X[node, chunk] &= ~(1 << pos)
+
+	def add_node_feature(self, graph, node, symbol):
+		self._add_node_feature(self.hypervectors, graph, node, symbol, self.X)
 
 	def encode(self):
 		m = hashlib.sha256()
