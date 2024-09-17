@@ -57,18 +57,18 @@ class Graphs():
 
 	@staticmethod
 	@jit(nopython=True)
-	def _add_node_feature(hypervectors, hypervector_size, graph, node, symbol, X):
+	def _add_node_feature(hypervectors, hypervector_size, graph_index, node, symbol, X):
 		for k in hypervectors[symbol,:]:
 			chunk = k // 32
 			pos = k % 32
-			X[node, chunk] |= (1 << pos)
+			X[graph_index + node, chunk] |= (1 << pos)
 
 			chunk = (k + hypervector_size) // 32
 			pos = (k + hypervector_size)  % 32
-			X[node, chunk] &= ~(1 << pos)
+			X[graph_index + node, chunk] &= ~(1 << pos)
 
 	def add_node_feature(self, graph, node, symbol):
-		self._add_node_feature(self.hypervectors, self.hypervector_size, graph, node, symbol, self.X)
+		self._add_node_feature(self.hypervectors, self.hypervector_size, self.graph_index[graph], node, symbol, self.X)
 
 	def encode(self):
 		m = hashlib.sha256()
