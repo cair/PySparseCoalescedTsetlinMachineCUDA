@@ -49,7 +49,7 @@ class Graphs():
 		self.number_of_hypervector_chunks = (self.hypervector_size*2 - 1) // 32 + 1
 
 		self.X = np.zeros((self.number_of_nodes.sum(), self.number_of_hypervector_chunks), dtype=np.uint32)
-		for k in range(self.hypervector_size, hypervector_size*2):
+		for k in range(self.hypervector_size, self.hypervector_size*2):
 			chunk = k // 32
 			pos = k % 32
 			self.X[:,chunk] |= (1 << pos)
