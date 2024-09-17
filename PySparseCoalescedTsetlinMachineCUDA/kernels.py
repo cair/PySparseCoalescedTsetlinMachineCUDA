@@ -199,8 +199,6 @@ code_update = """
                 return;
             }
 
-            X = &X[example * LA_CHUNKS * number_of_nodes];
-
             printf("%d:", y);
             for (int k = 0; k < LITERALS; ++k) {
                 int chunk = k / 32;
@@ -214,6 +212,9 @@ code_update = """
             }
 
             printf("\\n");
+
+            X = &X[example * LA_CHUNKS * number_of_nodes];
+
             for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
@@ -254,10 +255,29 @@ code_update = """
             /* Copy state to local memory for efficiency */  
             curandState localState = state[index];
 
+            if (index != 0) {
+                return;
+            }
+
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
+
+            printf("(%d %d):", y[example*CLASSES + 0],  y[example*CLASSES + 0]);
+            for (int k = 0; k < LITERALS; ++k) {
+                int chunk = k / 32;
+                int pos = k % 32;
+
+                if (X[chunk] & (1 << pos)) {
+                    printf(" 1");
+                } else {
+                    printf(" 0");
+                }
+            }
+
+            printf("\\n");
+
             // Calculate clause output first
-            for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
+            for (unsigned long long clause = 0; clause < CLAUSES; clause += 1) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
                 unsigned int clause_output;
@@ -348,7 +368,6 @@ code_evaluate = """
                     }
                 }
             }
-            printf("CLASS SUMS: %d %d\\n", class_sum[0], class_sum[0]);
         }
 
         // Evaluate examples
