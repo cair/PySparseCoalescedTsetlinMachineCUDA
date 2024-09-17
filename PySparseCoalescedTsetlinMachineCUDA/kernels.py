@@ -345,7 +345,7 @@ code_evaluate = """
                     }
                 }
             }
-            printf("CLASS SUMS: %d %d\n\n", class_sum[0], class_sum[0]);
+            printf("CLASS SUMS: %d %d\\n", class_sum[0], class_sum[0]);
         }
 
         // Evaluate examples
