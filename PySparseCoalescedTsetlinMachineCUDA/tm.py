@@ -242,7 +242,7 @@ class CommonTsetlinMachine():
 		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
 		self.evaluate_packed.prepare("PPPiPP")
 
-		encoded_X = np.zeros((graphs.X.shape[0]‚ graphs.max_node_count, self.number_of_ta_chunks), dtype=np.uint32)
+		encoded_X = np.zeros((graphs.X.shape[0], graphs.max_node_count, self.number_of_ta_chunks), dtype=np.uint32)
 		for k in range(self.number_of_literals//2, self.number_of_literals):
 			chunk = k // 32
 			pos = k % 32
