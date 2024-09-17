@@ -20,6 +20,7 @@
 
 import numpy as np
 from scipy.sparse import coo_matrix
+import hashlib
 
 class Graph():
 	def __init__(self):
@@ -124,7 +125,13 @@ class Graphs():
 
 		self.max_node_count = self.node_count.max()
 
-		self.signature = np.concatenate((self.X.indptr, self.X.indices, self.edges.indptr, self.edges.indices, self.edges.data))
+		m = hashlib.sha256()
+		m.update(self.X.indptr.data)
+		m.update(self.X.indices.data)
+		m.update(self.edges.indptr.data)
+		m.update(self.edges.indices.data)
+		m.update(self.edges.data.data)
+		self.signature = m.digest()
 
 		self.encoded = True
 
