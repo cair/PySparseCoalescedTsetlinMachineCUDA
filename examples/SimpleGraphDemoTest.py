@@ -29,7 +29,7 @@ args = default_args()
 
 number_of_nodes = np.repeat(args.max_sequence_length, args.number_of_examples).astype(np.uint32)
 
-graphs_train = Graphs(number_of_nodes, 2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_train = Graphs(number_of_nodes, number_of_symbols=2, hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
 Y_train = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
@@ -54,7 +54,7 @@ graphs_train.encode()
 
 print(graphs_train.hypervectors)
 
-graphs_test = Graphs(number_of_nodes, 2, init_with=graphs_train)
+graphs_test = Graphs(number_of_nodes, init_with=graphs_train)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
