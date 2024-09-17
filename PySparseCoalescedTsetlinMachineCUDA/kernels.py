@@ -190,13 +190,30 @@ code_update = """
         }
 
         // Evaluate example
-        __global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example)
+        __global__ void evaluate(unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int example, y)
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
+            if (index != 0) {
+                return;
+            }
+
             X = &X[example * LA_CHUNKS * number_of_nodes];
 
+            printf("%d:", y);
+            for (int k = 0; k < LITERALS; ++k) {
+                int chunk = k / 32;
+                int pos = k % 32;
+
+                if (X[chunk] & (1 << pos)) {
+                    printf(" 1");
+                } else {
+                    printf(" 0");
+                }
+            }
+
+            printf("\\n");
             for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
@@ -285,20 +302,6 @@ code_evaluate = """
             }
 
             X = &X[example * LA_CHUNKS * number_of_nodes];
-    
-            printf("%d:", y);
-            for (int k = 0; k < LITERALS; ++k) {
-                int chunk = k / 32;
-                int pos = k % 32;
-
-                if (X[chunk] & (1 << pos)) {
-                    printf(" 1");
-                } else {
-                    printf(" 0");
-                }
-            }
-
-            printf("\\n");
 
             for (int clause = 0; clause < CLAUSES; ++clause) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
