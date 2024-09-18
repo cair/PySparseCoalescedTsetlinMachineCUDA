@@ -241,7 +241,7 @@ code_update = """
             unsigned int *global_ta_state,
             int *clause_weights,
             int number_of_nodes,
-            int graph_index
+            int graph_index,
             int *class_sum,
             int *X,
             int *y,
