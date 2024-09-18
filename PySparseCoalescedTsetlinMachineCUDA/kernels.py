@@ -194,9 +194,9 @@ code_update = """
             unsigned int *global_ta_state,
             int *clause_weights,
             int number_of_nodes,
+            int graph_index,
             int *class_sum,
-            int *X,
-            int graph_index
+            int *X
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -241,10 +241,11 @@ code_update = """
             unsigned int *global_ta_state,
             int *clause_weights,
             int number_of_nodes,
+            int graph_index
             int *class_sum,
             int *X,
             int *y,
-            int graph_index
+            int example
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
