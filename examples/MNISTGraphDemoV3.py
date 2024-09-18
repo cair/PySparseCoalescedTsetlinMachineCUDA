@@ -6,6 +6,7 @@ from time import time
 import argparse
 from skimage.util import view_as_windows
 from keras.datasets import mnist
+from numba import jit
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
