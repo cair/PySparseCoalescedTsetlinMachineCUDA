@@ -226,7 +226,7 @@ class CommonTsetlinMachine():
 					self.class_sum_gpu,
 					self.encoded_X_train_gpu,
 					self.encoded_Y_gpu,
-					np.int32(e)
+					np.int32(graphs.node_index[e])
 				)
 				cuda.Context.synchronize()
 

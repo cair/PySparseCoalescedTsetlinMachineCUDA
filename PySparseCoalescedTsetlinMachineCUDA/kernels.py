@@ -236,7 +236,16 @@ code_update = """
         }
 
         // Update state of Tsetlin Automata team
-        __global__ void update(curandState *state, unsigned int *global_ta_state, int *clause_weights, int number_of_nodes, int *class_sum, int *X, int *y, int example)
+        __global__ void update(
+            curandState *state,
+            unsigned int *global_ta_state,
+            int *clause_weights,
+            int number_of_nodes,
+            int *class_sum,
+            int *X,
+            int *y,
+            int graph_index
+        )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
@@ -244,7 +253,7 @@ code_update = """
             /* Copy state to local memory for efficiency */  
             curandState localState = state[index];
 
-            X = &X[example * LA_CHUNKS * number_of_nodes];
+            X = &X[graph_index * LA_CHUNKS];
 
             // Calculate clause output first
             for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
