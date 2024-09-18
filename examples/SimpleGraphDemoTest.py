@@ -54,7 +54,7 @@ number_of_nodes_test = np.empty(args.number_of_examples, dtype=np.uint32)
 for i in range(args.number_of_examples):
     number_of_nodes_test[i] = np.random.randint(1, args.max_sequence_length)
 
-graphs_test = Graphs(number_of_nodes_test, symbols=['A', 'B'], hypervector_size=args.hypervector_size, hypervector_bits=args.hypervector_bits)
+graphs_test = Graphs(number_of_nodes_test, init_with=graphs_train)
 Y_test = np.empty(args.number_of_examples, dtype=np.uint32)
 
 for i in range(args.number_of_examples):
