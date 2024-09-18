@@ -134,7 +134,7 @@ class CommonTsetlinMachine():
 	def _init(self, graphs):
 		self.number_of_features = graphs.hypervector_size
 		if self.append_negated:
-			self.number_of_literals = self.number_of_features
+			self.number_of_literals = self.number_of_features*2
 		else:
 			self.number_of_literals = self.number_of_features
 
