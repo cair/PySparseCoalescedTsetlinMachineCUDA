@@ -134,7 +134,7 @@ class CommonTsetlinMachine():
 	def _init(self, graphs):
 		self.number_of_features = graphs.hypervector_size
 		if self.append_negated:
-			self.number_of_literals = self.number_of_features*2
+			self.number_of_literals = self.number_of_features
 		else:
 			self.number_of_literals = self.number_of_features
 
@@ -212,7 +212,7 @@ class CommonTsetlinMachine():
 					np.int32(graphs.number_of_nodes[e]),
 					self.class_sum_gpu,
 					self.encoded_X_train_gpu,
-					np.int32(graphs.node_index[e])
+					np.int32(e)
 				)
 				cuda.Context.synchronize()
 
@@ -226,7 +226,7 @@ class CommonTsetlinMachine():
 					self.class_sum_gpu,
 					self.encoded_X_train_gpu,
 					self.encoded_Y_gpu,
-					np.int32(graphs.node_index[e])
+					np.int32(e)
 				)
 				cuda.Context.synchronize()
 
@@ -258,7 +258,7 @@ class CommonTsetlinMachine():
 				np.int32(graphs.number_of_nodes[e]),
 				self.class_sum_gpu,
 				self.encoded_X_test_gpu,
-				np.int32(graphs.node_index[e])
+				np.int32(e)
 			)
 			cuda.Context.synchronize()
 
