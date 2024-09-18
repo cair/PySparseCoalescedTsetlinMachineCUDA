@@ -94,19 +94,18 @@ class CommonTsetlinMachine():
 			cuda.memcpy_dtoh(self.ta_state, self.ta_state_gpu)
 			self.clause_weights = np.empty(self.number_of_outputs*self.number_of_clauses, dtype=np.int32)
 			cuda.memcpy_dtoh(self.clause_weights, self.clause_weights_gpu)
-		return((self.ta_state, self.clause_weights, self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.number_of_nodes, self.depth, self.number_of_state_bits, self.number_of_ta_chunks, self.append_negated, self.min_y, self.max_y))
+		return((self.ta_state, self.clause_weights, self.number_of_outputs, self.number_of_clauses, self.number_of_literals, self.depth, self.number_of_state_bits, self.number_of_ta_chunks, self.append_negated, self.min_y, self.max_y))
 
 	def set_state(self, state):
 		self.number_of_outputs = state[2]
 		self.number_of_clauses = state[3]
 		self.number_of_literals = state[4]
-		self.number_of_nodes = state[7]
-		self.depth = state[8]
-		self.number_of_state_bits = state[9]
-		self.number_of_ta_chunks = state[10]
-		self.append_negated = state[11]
-		self.min_y = state[12]
-		self.max_y = state[13]
+		self.depth = state[7]
+		self.number_of_state_bits = state[8]
+		self.number_of_ta_chunks = state[9]
+		self.append_negated = state[10]
+		self.min_y = state[11]
+		self.max_y = state[12]
 		
 		self.ta_state_gpu = cuda.mem_alloc(self.depth*self.number_of_clauses*self.number_of_ta_chunks*self.number_of_state_bits*4)
 		self.clause_weights_gpu = cuda.mem_alloc(self.number_of_outputs*self.number_of_clauses*4)
