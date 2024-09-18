@@ -196,13 +196,13 @@ code_update = """
             int number_of_nodes,
             int *class_sum,
             int *X,
-            int graph_index
+            int example
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
-            X = &X[graph_index * LA_CHUNKS];
+            X = &X[example * LA_CHUNKS * number_of_nodes];
 
             for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
