@@ -288,15 +288,15 @@ code_evaluate = """
             unsigned int *global_ta_state,
             int *clause_weights,
             int number_of_nodes,
+            int graph_index,
             int *class_sum,
-            int *X,
-            int example
+            int *X
         )
         {
             int index = blockIdx.x * blockDim.x + threadIdx.x;
             int stride = blockDim.x * gridDim.x;
 
-            X = &X[example * LA_CHUNKS * number_of_nodes];
+            X = &X[graph_index * LA_CHUNKS];
 
             for (int clause = index; clause < CLAUSES; clause += stride) {
                 unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
@@ -345,59 +345,7 @@ code_evaluate = """
             }
         }
 
-        // Evaluate examples
-        __global__ void evaluate_packed(
-            unsigned int *included_literals,
-            unsigned int *included_literals_length,
-            int *clause_weights,
-            int number_of_nodes,
-            int *class_sum,
-            int *X
-        )
-        {
-            int index = blockIdx.x * blockDim.x + threadIdx.x;
-            int stride = blockDim.x * gridDim.x;
-
-            int patch_chunks = (((number_of_nodes-1)/INT_SIZE + 1));
-            unsigned int patch_filter;
-            if (patch_chunks % 32 != 0) {
-                patch_filter = (~(0xffffffff << (number_of_nodes % INT_SIZE)));
-            } else {
-                patch_filter = 0xffffffff;
-            }
-
-            for (int clause = index; clause < CLAUSES; clause += stride) {
-                if (included_literals_length[clause] == 0) {
-                    continue;
-                }
-
-                unsigned int clause_output = 0;
-                for (int patch_chunk = 0; patch_chunk < patch_chunks-1; ++patch_chunk) {
-                    clause_output = (~(0U));
-                    for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-                        clause_output &= X[patch_chunk*LITERALS + included_literals[clause*LITERALS + literal]];
-                    }
-
-                    if (clause_output) {
-                        break;
-                    }
-                }
-
-                if (!clause_output) {
-                    clause_output = patch_filter;
-                    for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-                        clause_output &= X[(patch_chunks-1)*LITERALS + included_literals[clause*LITERALS + literal]];
-                    }
-                }
-
-                if (clause_output) {
-                    for (int class_id = 0; class_id < CLASSES; ++class_id) {
-                        int clause_weight = clause_weights[class_id*CLAUSES + clause];
-                        atomicAdd(&class_sum[class_id], clause_weight);                 
-                    }
-                }
-            }
-        }
+  
     }
 """
 
@@ -426,36 +374,6 @@ code_prepare = """
                         ta_state[la_chunk*STATE_BITS + b] = ~0;
                     }
                     ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] = 0;
-                }
-            }
-
-            state[index] = localState;
-        }
-
-        __global__ void prepare_packed(
-            curandState *state,
-            unsigned int *global_ta_state,
-            unsigned int *included_literals,
-            unsigned int *included_literals_length
-        )
-        {
-            int index = blockIdx.x * blockDim.x + threadIdx.x;
-            int stride = blockDim.x * gridDim.x;
-
-            curandState localState = state[index];
-
-            for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
-                unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
-
-                included_literals_length[clause] = 0;
-                for (int literal = 0; literal < LITERALS; ++literal) {
-                    int chunk = literal / INT_SIZE;
-                    int pos = literal % INT_SIZE;
-
-                    if ((ta_state[chunk*STATE_BITS + STATE_BITS - 1] & (1U << pos)) > 0) {
-                        included_literals[clause*LITERALS + included_literals_length[clause]] = literal;
-                        included_literals_length[clause]++;
-                    }
                 }
             }
 

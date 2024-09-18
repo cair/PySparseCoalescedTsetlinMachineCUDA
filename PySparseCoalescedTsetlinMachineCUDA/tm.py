@@ -161,7 +161,7 @@ class CommonTsetlinMachine():
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
-		self.evaluate.prepare("PPiPPi")
+		self.evaluate.prepare("PPiiPP")
 
 		self.initialized = True
 
@@ -247,9 +247,9 @@ class CommonTsetlinMachine():
 				self.ta_state_gpu,
 				self.clause_weights_gpu,
 				np.int32(graphs.number_of_nodes[e]),
+				np.int32(graphs.node_index[e]),
 				self.class_sum_gpu,
-				self.encoded_X_test_gpu,
-				np.int32(e)
+				self.encoded_X_test_gpu
 			)
 			cuda.Context.synchronize()
 
