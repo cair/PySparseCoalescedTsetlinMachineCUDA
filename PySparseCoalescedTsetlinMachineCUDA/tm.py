@@ -73,16 +73,6 @@ class CommonTsetlinMachine():
 		self.ta_state = np.array([])
 		self.clause_weights = np.array([])
 
-		mod_encode = SourceModule(kernels.code_encode, no_extern_c=True)
-		self.encode = mod_encode.get_function("encode")
-		self.encode.prepare("PPPiiii")
-
-		self.restore = mod_encode.get_function("restore")
-		self.restore.prepare("PPPiiii")
-
-		self.produce_autoencoder_examples= mod_encode.get_function("produce_autoencoder_example")
-		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
-
 		self.initialized = False
 
 	def allocate_gpu_memory(self):
@@ -164,10 +154,10 @@ class CommonTsetlinMachine():
 
 		mod_update = SourceModule(parameters + kernels.code_header + kernels.code_update, no_extern_c=True)
 		self.update = mod_update.get_function("update")
-		self.update.prepare("PPPiPPPi")
+		self.update.prepare("PPPiiPPPi")
 
 		self.evaluate_update = mod_update.get_function("evaluate")
-		self.evaluate_update.prepare("PPiPPi")
+		self.evaluate_update.prepare("PPiiPP")
 
 		mod_evaluate = SourceModule(parameters + kernels.code_header + kernels.code_evaluate, no_extern_c=True)
 		self.evaluate = mod_evaluate.get_function("evaluate")
@@ -210,9 +200,9 @@ class CommonTsetlinMachine():
 					self.ta_state_gpu,
 					self.clause_weights_gpu,
 					np.int32(graphs.number_of_nodes[e]),
+					np.int32(graphs.node_index[e]),
 					self.class_sum_gpu,
-					self.encoded_X_train_gpu,
-					np.int32(graphs.node_index[e])
+					self.encoded_X_train_gpu
 				)
 				cuda.Context.synchronize()
 
@@ -223,10 +213,11 @@ class CommonTsetlinMachine():
 					self.ta_state_gpu,
 					self.clause_weights_gpu,
 					np.int32(graphs.number_of_nodes[e]),
+					np.int32(graphs.node_index[e]),
 					self.class_sum_gpu,
 					self.encoded_X_train_gpu,
 					self.encoded_Y_gpu,
-					np.int32(graphs.node_index[e])
+					np.int32(e)
 				)
 				cuda.Context.synchronize()
 
