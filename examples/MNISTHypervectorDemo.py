@@ -86,7 +86,7 @@ print("Testing data produced")
 X_train = X_train_tokenized
 X_test = X_test_tokenized
 
-tm = MultiClassConvolutionalTsetlinMachine2D(args.number_of_clauses*10, args.T, args.s, (dim, dim, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
+tm = MultiClassConvolutionalTsetlinMachine2D(args.number_of_clauses, args.T, args.s, (dim, dim, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
 for epoch in range(args.epochs):
     start_training = time()
