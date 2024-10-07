@@ -83,8 +83,8 @@ print("Testing data produced")
 
 # Starts training on the visual tokens encoded as hypervectors
 
-X_train = X_train_tokenized
-X_test = X_test_tokenized
+X_train = X_train_tokenized.reshape(X_train.shape[0], -1).tocsr()
+X_test = X_test_tokenized.reshape(X_test.shape[0], -1).tocsr()
 
 tm = MultiClassConvolutionalTsetlinMachine2D(args.number_of_clauses, args.T, args.s, (dim, dim, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
