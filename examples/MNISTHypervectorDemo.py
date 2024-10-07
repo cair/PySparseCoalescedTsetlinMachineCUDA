@@ -7,6 +7,7 @@ from skimage.util import view_as_windows
 from sklearn.feature_extraction.text import CountVectorizer
 from skimage.util import view_as_windows
 import argparse
+from scipy.sparse import csr_matrix, csc_matrix, lil_matrix
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
@@ -83,8 +84,8 @@ print("Testing data produced")
 
 # Starts training on the visual tokens encoded as hypervectors
 
-X_train = X_train_tokenized.reshape(X_train.shape[0], -1).tocsr()
-X_test = X_test_tokenized.reshape(X_test.shape[0], -1).tocsr()
+X_train = csr_matrix(X_train_tokenized.reshape(X_train.shape[0], -1))
+X_test = csr_matrix(X_test_tokenized.reshape(X_test.shape[0], -1))
 
 tm = MultiClassConvolutionalTsetlinMachine2D(args.number_of_clauses, args.T, args.s, (dim, dim, args.hypervector_size), (1, 1), max_included_literals=args.max_included_literals)
 
