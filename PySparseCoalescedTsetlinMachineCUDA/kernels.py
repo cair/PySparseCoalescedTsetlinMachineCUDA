@@ -104,7 +104,7 @@ code_update = """
 			} 
 		}
 
-		__device__ inline void calculate_clause_output(curandState *localState, unsigned int *ta_state, unsigned int *clause_output, int *clause_patch, int *X)
+		__device__ inline void calculate_clause_output(curandState *localState, unsigned int *ta_state, unsigned int *clause_output, int *clause_patch, int *match_count, int *X)
 		{
 			int output_one_patches[PATCHES];
 			int output_one_patches_count;
@@ -127,6 +127,7 @@ code_update = """
 				if (patch_clause_output) {
 					output_one_patches[output_one_patches_count] = patch;
 					output_one_patches_count++;
+					match_count[patch]++;
 				}
 			}
 		
@@ -241,6 +242,12 @@ code_update = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
+			int match_count[PATCHES];
+
+			for (int patch = 0; patch < PATCHES; patch++) {
+				match_count[patch] = 0;
+			}
+
 			/* Copy state to local memory for efficiency */  
 			curandState localState = state[index];
 
@@ -250,7 +257,7 @@ code_update = """
 
 				unsigned int clause_output;
 				int clause_patch;
-				calculate_clause_output(&localState, ta_state, &clause_output, &clause_patch, X);
+				calculate_clause_output(&localState, ta_state, &clause_output, &clause_patch, match_count, X);
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
