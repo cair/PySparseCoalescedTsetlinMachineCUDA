@@ -254,11 +254,7 @@ code_update = """
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
-					if (local_class_sum > THRESHOLD) {
-						local_class_sum = THRESHOLD;
-					} else if (local_class_sum < -THRESHOLD) {
-						local_class_sum = -THRESHOLD;
-					}
+					
 					update_clause(&localState, &clause_weights[class_id*CLAUSES + clause], ta_state, clause_output, clause_patch, X, y[example*CLASSES + class_id], local_class_sum);
 				}
 			}
