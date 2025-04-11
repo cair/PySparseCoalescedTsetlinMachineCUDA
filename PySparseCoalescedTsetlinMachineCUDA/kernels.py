@@ -271,7 +271,7 @@ code_update = """
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
-					int clipped_local_sum = local_class_sum;
+					int clipped_local_class_sum = local_class_sum;
 					if (local_class_sum > THRESHOLD) {
 						clipped_local_class_sum = THRESHOLD;
 					} else if (local_class_sum < -THRESHOLD) {
