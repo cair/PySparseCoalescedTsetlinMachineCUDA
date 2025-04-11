@@ -140,6 +140,34 @@ code_update = """
 			}
 		}
 
+		__device__ inline void update_weight(curandState *localState, int *clause_weight, unsigned int *ta_state, int clause_output, int clause_patch, int *X, int y, int class_sum)
+		{
+			int target = 1 - 2*(class_sum > y);
+			
+			if (target == -1 && curand_uniform(localState) > 1.0*Q/max(1, CLASSES-1)) {
+				return;
+			}
+
+			int sign = (*clause_weight >= 0) - (*clause_weight < 0);
+		
+			int absolute_prediction_error = abs(y - class_sum);
+			if (curand_uniform(localState) <= 1.0*absolute_prediction_error/(2*THRESHOLD)) {
+				if (target*sign > 0) {
+					if (clause_output && abs(*clause_weight) < INT_MAX) {
+						(*clause_weight) += sign;
+					}
+				} else if (target*sign < 0 && clause_output) {
+					// Type II Feedback
+
+					(*clause_weight) -= sign;
+					#if NEGATIVE_CLAUSES == 0
+						if (*clause_weight < 1) {
+							*clause_weight = 1;
+						}
+					#endif
+				}
+			}
+		}
 		__device__ inline void update_clause(curandState *localState, int *clause_weight, unsigned int *ta_state, int clause_output, int clause_patch, int *X, int y, int class_sum)
 		{
 			int target = 1 - 2*(class_sum > y);
@@ -154,10 +182,6 @@ code_update = """
 			if (curand_uniform(localState) <= 1.0*absolute_prediction_error/(2*THRESHOLD)) {
 				if (target*sign > 0) {
 					int included_literals = number_of_include_actions(ta_state);
-
-					if (clause_output && abs(*clause_weight) < INT_MAX) {
-						(*clause_weight) += sign;
-					}
 
 					// Type I Feedback
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS; ++la_chunk) {
@@ -183,13 +207,6 @@ code_update = """
 					}
 				} else if (target*sign < 0 && clause_output) {
 					// Type II Feedback
-
-					(*clause_weight) -= sign;
-					#if NEGATIVE_CLAUSES == 0
-						if (*clause_weight < 1) {
-							*clause_weight = 1;
-						}
-					#endif
 
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS; ++la_chunk) {
 						inc(ta_state, 0, la_chunk, (~X[clause_patch*LA_CHUNKS + la_chunk]) & (~ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]));
@@ -254,8 +271,14 @@ code_update = """
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
-					
-					update_clause(&localState, &clause_weights[class_id*CLAUSES + clause], ta_state, clause_output, clause_patch, X, y[example*CLASSES + class_id], local_class_sum);
+					int clipped_local_sum = local_class_sum;
+					if (local_class_sum > THRESHOLD) {
+						clipped_local_class_sum = THRESHOLD;
+					} else if (local_class_sum < -THRESHOLD) {
+						clipped_local_class_sum = -THRESHOLD;
+					}
+					update_clause(&localState, &clause_weights[class_id*CLAUSES + clause], ta_state, clause_output, clause_patch, X, y[example*CLASSES + class_id], clipped_local_class_sum);
+					update_weight(&localState, &clause_weights[class_id*CLAUSES + clause], ta_state, clause_output, clause_patch, X, y[example*CLASSES + class_id], local_class_sum);
 				}
 			}
 		
