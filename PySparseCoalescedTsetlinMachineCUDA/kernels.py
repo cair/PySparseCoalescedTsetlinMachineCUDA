@@ -130,7 +130,7 @@ code_update = """
 				}
 			}
 		
-			if (output_one_patches_count > 0) {
+			if (output_one_patches_count == PATCHES) {
 				*clause_output = 1;
 				int patch_id = curand(localState) % output_one_patches_count;
 				*clause_patch = output_one_patches[patch_id];
@@ -207,9 +207,8 @@ code_update = """
 			for (int clause = index; clause < CLAUSES; clause += stride) {
 				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
 
-				int clause_output;
+				int clause_output = 1;
 				for (int patch = 0; patch < PATCHES; ++patch) {
-					clause_output = 1;
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
 						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
 							clause_output = 0;
@@ -221,7 +220,7 @@ code_update = """
 						clause_output = 0;
 					}
 
-					if (clause_output) {
+					if (!clause_output) {
 						break;
 					}
 				}
@@ -296,9 +295,8 @@ code_evaluate = """
 					continue;
 				}
 
-				int clause_output;
+				int clause_output = 1;
 				for (int patch = 0; patch < PATCHES; ++patch) {
-					clause_output = 1;
 					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
 						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
 							clause_output = 0;
@@ -310,7 +308,7 @@ code_evaluate = """
 						clause_output = 0;
 					}
 
-					if (clause_output) {
+					if (!clause_output) {
 						break;
 					}
 				}
@@ -343,26 +341,23 @@ code_evaluate = """
 					continue;
 				}
 
-				unsigned int clause_output = 0;
+				unsigned int clause_output = (~(0U));
 				for (int patch_chunk = 0; patch_chunk < PATCH_CHUNKS-1; ++patch_chunk) {
-					clause_output = (~(0U));
 					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
 						clause_output &= X[patch_chunk*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
 					}
 
-					if (clause_output) {
+					if (clause_output != (~(0U))) {
 						break;
 					}
 				}
 
-				if (!clause_output) {
-					clause_output = PATCH_FILTER;
-					for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
-						clause_output &= X[(PATCH_CHUNKS-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
-					}
+				clause_output &= PATCH_FILTER;
+				for (int literal = 0; literal < included_literals_length[clause]; ++literal) {
+					clause_output &= X[(PATCH_CHUNKS-1)*FEATURES + included_literals[clause*FEATURES*2 + literal*2]];
 				}
-
-				if (clause_output) {
+			
+				if (clause_output == PATCH_FILTER) {
 					for (int class_id = 0; class_id < CLASSES; ++class_id) {
 						int clause_weight = clause_weights[class_id*CLAUSES + clause];
 						atomicAdd(&class_sum[class_id], clause_weight);					
