@@ -24,9 +24,9 @@ epochs = 100
 
 hypervector_size = 14
 
-clauses = 10000
-T = 8000
-s = 10.0
+clauses = 1000*2
+T = 10000
+s = 1.0
 
 print("Downloading dataset...")
 
