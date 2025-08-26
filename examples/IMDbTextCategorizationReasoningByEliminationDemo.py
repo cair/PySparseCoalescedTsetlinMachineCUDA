@@ -98,39 +98,3 @@ if __name__ == "__main__":
         result = 100 * (tm.predict(X_test) == Y_test).mean()
 
         _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}")
-
-    print("\nPositive Polarity:", end=' ')
-    literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=False).astype(np.int32)
-    sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-    for k in sorted_literals:
-        if literal_importance[k] == 0:
-            break
-
-        print(feature_names[selected_features[k]], end=' ')
-
-    literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=False).astype(np.int32)
-    sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-    for k in sorted_literals:
-        if literal_importance[k] == 0:
-            break
-
-        print("¬'" + feature_names[selected_features[k - args.features]] + "'", end=' ')
-
-    print()
-    print("\nNegative Polarity:", end=' ')
-    literal_importance = tm.literal_importance(1, negated_features=False, negative_polarity=True).astype(np.int32)
-    sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-    for k in sorted_literals:
-        if literal_importance[k] == 0:
-            break
-
-        print(feature_names[selected_features[k]], end=' ')
-
-    literal_importance = tm.literal_importance(1, negated_features=True, negative_polarity=True).astype(np.int32)
-    sorted_literals = np.argsort(-1*literal_importance)[0:profile_size]
-    for k in sorted_literals:
-        if literal_importance[k] == 0:
-            break
-
-        print("¬'" + feature_names[selected_features[k - args.features]] + "'", end=' ')
-    print()
