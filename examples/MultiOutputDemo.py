@@ -1,4 +1,4 @@
-from PyCoalescedTsetlinMachineCUDA.tm import MultiOutputTsetlinMachine
+from PySparseCoalescedTsetlinMachineCUDA.tm import MultiOutputTsetlinMachine
 import numpy as np
 
 noise = 0.1

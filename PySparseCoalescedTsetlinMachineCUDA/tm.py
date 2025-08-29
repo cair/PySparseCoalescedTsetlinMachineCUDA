@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Ole-Christoffer Granmo
+# Copyright (c) 2025 Ole-Christoffer Granmo and the University of Agder
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,7 @@ class CommonTsetlinMachine():
 			T,
 			s,
 			q=1.0,
+			number_of_clause_groups=1,
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
@@ -58,6 +59,7 @@ class CommonTsetlinMachine():
 		self.T = int(T)
 		self.s = s
 		self.q = q
+		self.number_of_clause_groups = number_of_clause_groups
 		self.max_included_literals = max_included_literals
 		self.boost_true_positive_feedback = boost_true_positive_feedback
 		self.append_negated = append_negated
@@ -199,9 +201,9 @@ class CommonTsetlinMachine():
 
 	def _init(self, X):
 		if self.append_negated:
-			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))*2
+			self.number_of_features = int((self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1])) // self.number_of_clause_groups)*2
 		else:
-			self.number_of_features = int(self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1]))
+			self.number_of_features = int((self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1])) // self.number_of_clause_groups)
 
 		if self.max_included_literals == None:
 			self.max_included_literals = self.number_of_features
@@ -218,11 +220,12 @@ class CommonTsetlinMachine():
 #define S %f
 #define THRESHOLD %d
 #define Q %f
+#define NUMBER_OF_CLAUSE_GROUPS %d
 #define MAX_INCLUDED_LITERALS %d
 #define NEGATIVE_CLAUSES %d
 #define PATCHES %d
 #define NUMBER_OF_EXAMPLES %d
-""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.max_included_literals, self.negative_clauses, self.number_of_patches, X.shape[0])
+""" % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.number_of_clause_groups, self.max_included_literals, self.negative_clauses, self.number_of_patches, X.shape[0])
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
