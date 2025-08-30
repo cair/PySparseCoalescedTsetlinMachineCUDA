@@ -47,7 +47,6 @@ class CommonTsetlinMachine():
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
@@ -62,7 +61,6 @@ class CommonTsetlinMachine():
 		self.number_of_clause_groups = number_of_clause_groups
 		self.max_included_literals = max_included_literals
 		self.boost_true_positive_feedback = boost_true_positive_feedback
-		self.append_negated = append_negated
 		self.grid = grid
 		self.block = block
 
@@ -75,16 +73,16 @@ class CommonTsetlinMachine():
 
 		mod_encode = SourceModule(kernels.code_encode, no_extern_c=True)
 		self.encode = mod_encode.get_function("encode")
-		self.encode.prepare("PPPiiiiiiii")
+		self.encode.prepare("PPPiiiiii")
 		
 		self.restore = mod_encode.get_function("restore")
-		self.restore.prepare("PPPiiiiiiii")
+		self.restore.prepare("PPPiiiiii")
 
 		self.encode_packed = mod_encode.get_function("encode_packed")
-		self.encode_packed.prepare("PPPiiiiiiii")
+		self.encode_packed.prepare("PPPiiiiii")
 		
 		self.restore_packed = mod_encode.get_function("restore_packed")
-		self.restore_packed.prepare("PPPiiiiiiii")
+		self.restore_packed.prepare("PPPiiiiii")
 
 		self.produce_autoencoder_examples= mod_encode.get_function("produce_autoencoder_example")
 		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
@@ -179,7 +177,7 @@ class CommonTsetlinMachine():
 
 		X_transformed = np.empty((number_of_examples, self.number_of_clauses), dtype=np.uint32)
 		for e in range(number_of_examples):
-			self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.encode_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]))
 			cuda.Context.synchronize()
 
 			transform_gpu(
@@ -194,16 +192,13 @@ class CommonTsetlinMachine():
 
 			cuda.memcpy_dtoh(X_transformed[e,:], X_transformed_gpu)
 
-			self.restore_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.restore_packed.prepared_call(self.grid, self.block, X_indptr_gpu, X_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]))
 			cuda.Context.synchronize()
 		
 		return csr_matrix(X_transformed)
 
 	def _init(self, X):
-		if self.append_negated:
-			self.number_of_features = int((self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1])) // self.number_of_clause_groups)*2
-		else:
-			self.number_of_features = int((self.patch_dim[0]*self.patch_dim[1]*self.dim[2] + (self.dim[0] - self.patch_dim[0]) + (self.dim[1] - self.patch_dim[1])) // self.number_of_clause_groups)
+		self.number_of_features = int((self.patch_dim[0]*self.patch_dim[1]*self.dim[2]) // self.number_of_clause_groups)
 
 		if self.max_included_literals == None:
 			self.max_included_literals = self.number_of_features
@@ -220,7 +215,7 @@ class CommonTsetlinMachine():
 #define S %f
 #define THRESHOLD %d
 #define Q %f
-#define NUMBER_OF_CLAUSE_GROUPS %d
+#define CLAUSE_GROUPS %d
 #define MAX_INCLUDED_LITERALS %d
 #define NEGATIVE_CLAUSES %d
 #define PATCHES %d
@@ -247,76 +242,15 @@ class CommonTsetlinMachine():
 		self.evaluate_packed = mod_evaluate.get_function("evaluate_packed")
 		self.evaluate_packed.prepare("PPPPPPP")
 
-		encoded_X = np.zeros((self.number_of_patches, self.number_of_ta_chunks), dtype=np.uint32)
-		for patch_coordinate_y in range(self.dim[1] - self.patch_dim[1] + 1):
-			for patch_coordinate_x in range(self.dim[0] - self.patch_dim[0] + 1):
-				p = patch_coordinate_y * (self.dim[0] - self.patch_dim[0] + 1) + patch_coordinate_x
-
-				if self.append_negated:
-					for k in range(self.number_of_features//2, self.number_of_features):
-						chunk = k // 32
-						pos = k % 32
-						encoded_X[p, chunk] |= (1 << pos)
-
-				for y_threshold in range(self.dim[1] - self.patch_dim[1]):
-					patch_pos = y_threshold
-					if patch_coordinate_y > y_threshold:
-						chunk = patch_pos // 32
-						pos = patch_pos % 32
-						encoded_X[p, chunk] |= (1 << pos)
-
-						if self.append_negated:
-							chunk = (patch_pos + self.number_of_features//2) // 32
-							pos = (patch_pos + self.number_of_features//2) % 32
-							encoded_X[p, chunk] &= ~np.uint32(1 << pos)
-
-				for x_threshold in range(self.dim[0] - self.patch_dim[0]):
-					patch_pos = (self.dim[1] - self.patch_dim[1]) + x_threshold
-					if patch_coordinate_x > x_threshold:
-						chunk = patch_pos // 32
-						pos = patch_pos % 32
-						encoded_X[p, chunk] |= (1 << pos)
-
-						if self.append_negated:
-							chunk = (patch_pos + self.number_of_features//2) // 32
-							pos = (patch_pos + self.number_of_features//2) % 32
-							encoded_X[p, chunk] &= ~np.uint32(1 << pos)
-
-		encoded_X = encoded_X.reshape(-1)
+		encoded_X = np.empty((self.number_of_patches * self.number_of_clause_groups * self.number_of_ta_chunks), dtype=np.uint32)
+		encoded_X[:] = np.uint32(~0)
 		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
 
 		# Encoded X packed
 
-		encoded_X_packed = np.zeros(((self.number_of_patches-1)//32 + 1, self.number_of_features), dtype=np.uint32)
-		if self.append_negated:
-			for p_chunk in range((self.number_of_patches-1)//32 + 1):
-				for k in range(self.number_of_features//2, self.number_of_features):
-					encoded_X_packed[p_chunk, k] = ~np.uint32(0) 
-
-		for patch_coordinate_y in range(self.dim[1] - self.patch_dim[1] + 1):
-			for patch_coordinate_x in range(self.dim[0] - self.patch_dim[0] + 1):
-				p = patch_coordinate_y * (self.dim[0] - self.patch_dim[0] + 1) + patch_coordinate_x
-				p_chunk = p // 32
-				p_pos = p % 32
-
-				for y_threshold in range(self.dim[1] - self.patch_dim[1]):
-					patch_pos = y_threshold
-					if patch_coordinate_y > y_threshold:
-						encoded_X_packed[p_chunk, patch_pos] |= (1 << p_pos)
-
-						if self.append_negated:
-							encoded_X_packed[p_chunk, patch_pos + self.number_of_features//2] &= ~np.uint32(1 << p_pos)
-
-				for x_threshold in range(self.dim[0] - self.patch_dim[0]):
-					patch_pos = (self.dim[1] - self.patch_dim[1]) + x_threshold
-					if patch_coordinate_x > x_threshold:
-						encoded_X_packed[p_chunk, patch_pos] |= (1 << p_pos)
-
-						if self.append_negated:
-							encoded_X_packed[p_chunk, patch_pos + self.number_of_features//2] &= ~np.uint32(1 << p_pos)
-
-		encoded_X_packed = encoded_X_packed.reshape(-1)
+		encoded_X_packed = np.empty((((self.number_of_patches-1)//32 + 1) * self.number_of_clause_groups * self.number_of_features), dtype=np.uint32)
+		encoded_X_packed[:] = np.uint32(~0)
 		self.encoded_X_packed_gpu = cuda.mem_alloc(encoded_X_packed.nbytes)
 		cuda.memcpy_htod(self.encoded_X_packed_gpu, encoded_X_packed)
 
@@ -353,7 +287,7 @@ class CommonTsetlinMachine():
 				class_sum = np.zeros(self.number_of_outputs).astype(np.int32)
 				cuda.memcpy_htod(self.class_sum_gpu, class_sum)
 
-				self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+				self.encode.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]))
 				cuda.Context.synchronize()
 
 				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu)
@@ -362,7 +296,7 @@ class CommonTsetlinMachine():
 				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]))
 				cuda.Context.synchronize()
 
 		self.ta_state = np.array([])
@@ -391,7 +325,7 @@ class CommonTsetlinMachine():
 		for e in range(X.shape[0]):
 			cuda.memcpy_htod(self.class_sum_gpu, class_sum[e,:])
 
-			self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.encode_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(0))
 			cuda.Context.synchronize()
 
 			self.evaluate_packed.prepared_call(
@@ -407,7 +341,7 @@ class CommonTsetlinMachine():
 			)
 			cuda.Context.synchronize()
 
-			self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(self.append_negated), np.int32(0))
+			self.restore_packed.prepared_call(self.grid, self.block, self.X_test_indptr_gpu, self.X_test_indices_gpu, self.encoded_X_packed_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[1]), np.int32(0))
 			cuda.Context.synchronize()
 
 			cuda.memcpy_dtoh(class_sum[e,:], self.class_sum_gpu)
@@ -430,11 +364,10 @@ class MultiClassConvolutionalTsetlinMachine2D(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.dim = dim
 		self.patch_dim = patch_dim
 		self.negative_clauses = 1
@@ -476,11 +409,10 @@ class MultiOutputConvolutionalTsetlinMachine2D(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.dim = dim
 		self.patch_dim = patch_dim
 		self.negative_clauses = 1
@@ -515,11 +447,10 @@ class MultiOutputTsetlinMachine(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.negative_clauses = 1
 
 	def fit(self, X, Y, epochs=100, incremental=False):
@@ -555,11 +486,10 @@ class MultiClassTsetlinMachine(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.negative_clauses = 1
 
 	def fit(self, X, Y, epochs=100, incremental=False):
@@ -598,11 +528,10 @@ class TsetlinMachine(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.negative_clauses = 1
 
 	def fit(self, X, Y, epochs=100, incremental=False):
@@ -636,11 +565,10 @@ class RegressionTsetlinMachine(CommonTsetlinMachine):
 			max_included_literals=None,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.negative_clauses = 0
 
 	def fit(self, X, Y, epochs=100, incremental=False):
@@ -675,11 +603,10 @@ class AutoEncoderTsetlinMachine(CommonTsetlinMachine):
 			accumulation = 1,
 			boost_true_positive_feedback=1,
 			number_of_state_bits=8,
-			append_negated=True,
 			grid=(16*13*4,1,1),
 			block=(128,1,1)
 	):
-		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, append_negated=append_negated, grid=grid, block=block)
+		super().__init__(number_of_clauses, T, s, q=q, max_included_literals=max_included_literals, boost_true_positive_feedback=boost_true_positive_feedback, number_of_state_bits=number_of_state_bits, grid=grid, block=block)
 		self.negative_clauses = 1
 
 		self.active_output = np.array(active_output).astype(np.uint32)
@@ -742,8 +669,7 @@ class AutoEncoderTsetlinMachine(CommonTsetlinMachine):
                                             self.encoded_Y_gpu,
                                             target,
                                             int(self.accumulation),
-                                            int(self.T),
-                                            int(self.append_negated))
+                                            int(self.T))
 				cuda.Context.synchronize()
 
 				self.evaluate_update.prepared_call(self.grid, self.block, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu)
