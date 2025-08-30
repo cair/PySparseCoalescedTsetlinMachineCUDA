@@ -26,7 +26,7 @@ code_header = """
 	
 	#define INT_SIZE 32
 
-	#define LA_CHUNKS (((FEATURES-1)/INT_SIZE + 1))
+	#define TA_CHUNKS (((FEATURES-1)/INT_SIZE + 1))
 	#define CLAUSE_CHUNKS ((CLAUSES-1)/INT_SIZE + 1)
 
 	#if (FEATURES % 32 != 0)
@@ -51,11 +51,11 @@ code_update = """
 	    __device__ inline int number_of_include_actions(unsigned int *ta_state)
 	    {
 	        int number_of_include_actions = 0;
-	        for (int k = 0; k < LA_CHUNKS-1; ++k) {
+	        for (int k = 0; k < TA_CHUNKS-1; ++k) {
 	            unsigned int ta_pos = k*STATE_BITS + STATE_BITS-1;
 	            number_of_include_actions += __popc(ta_state[ta_pos]);
 	        }
-	        unsigned int ta_pos = (LA_CHUNKS-1)*STATE_BITS + STATE_BITS-1;
+	        unsigned int ta_pos = (TA_CHUNKS-1)*STATE_BITS + STATE_BITS-1;
 	        number_of_include_actions += __popc(ta_state[ta_pos] & FILTER);
 
 	        return(number_of_include_actions);
@@ -65,7 +65,7 @@ code_update = """
 		__device__ inline void inc(unsigned int *ta_state, int clause, int chunk, unsigned int active)
 		{
 			unsigned int carry, carry_next;
-			int id = clause*LA_CHUNKS*STATE_BITS + chunk*STATE_BITS;
+			int id = clause*TA_CHUNKS*STATE_BITS + chunk*STATE_BITS;
 			carry = active;
 			for (int b = 0; b < STATE_BITS; ++b) {
 				if (carry == 0)
@@ -87,7 +87,7 @@ code_update = """
 		__device__ inline void dec(unsigned int *ta_state, int clause, int chunk, unsigned int active)
 		{
 			unsigned int carry, carry_next;
-			int id = clause*LA_CHUNKS*STATE_BITS + chunk*STATE_BITS;
+			int id = clause*TA_CHUNKS*STATE_BITS + chunk*STATE_BITS;
 			carry = active;
 			for (int b = 0; b < STATE_BITS; ++b) {
 				if (carry == 0)
@@ -113,14 +113,14 @@ code_update = """
 			output_one_patches_count = 0;
 			for (int patch = 0; patch < PATCHES; ++patch) {
 				int patch_clause_output = 1;
-				for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
-					if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
+				for (int la_chunk = 0; la_chunk < TA_CHUNKS-1; ++la_chunk) {
+					if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
 						patch_clause_output = 0;
 						break;
 					}
 				}
 
-				if (((ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + LA_CHUNKS - 1] & FILTER) != (ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER))) {
+				if (((ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + TA_CHUNKS - 1] & FILTER) != (ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER))) {
 					patch_clause_output = 0;
 				}
 
@@ -160,7 +160,7 @@ code_update = """
 					}
 
 					// Type I Feedback
-					for (int la_chunk = 0; la_chunk < LA_CHUNKS; ++la_chunk) {
+					for (int la_chunk = 0; la_chunk < TA_CHUNKS; ++la_chunk) {
 						// Generate random bit values
 						unsigned int la_feedback = 0;
 						for (int b = 0; b < INT_SIZE; ++b) {
@@ -171,12 +171,12 @@ code_update = """
 
 						if (clause_output && included_literals <= MAX_INCLUDED_LITERALS) {
 							#if BOOST_TRUE_POSITIVE_FEEDBACK == 1
-								inc(ta_state, 0, la_chunk, X[clause_patch*LA_CHUNKS + la_chunk]);
+								inc(ta_state, 0, la_chunk, X[clause_patch*TA_CHUNKS + la_chunk]);
 							#else
-								inc(ta_state, 0, la_chunk, X[clause_patch*LA_CHUNKS + la_chunk] & (~la_feedback));
+								inc(ta_state, 0, la_chunk, X[clause_patch*TA_CHUNKS + la_chunk] & (~la_feedback));
 							#endif
 
-							dec(ta_state, 0, la_chunk, (~X[clause_patch*LA_CHUNKS + la_chunk]) & la_feedback);
+							dec(ta_state, 0, la_chunk, (~X[clause_patch*TA_CHUNKS + la_chunk]) & la_feedback);
 						} else {
 							dec(ta_state, 0, la_chunk, la_feedback);
 						}
@@ -191,8 +191,8 @@ code_update = """
 						}
 					#endif
 
-					for (int la_chunk = 0; la_chunk < LA_CHUNKS; ++la_chunk) {
-						inc(ta_state, 0, la_chunk, (~X[clause_patch*LA_CHUNKS + la_chunk]) & (~ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]));
+					for (int la_chunk = 0; la_chunk < TA_CHUNKS; ++la_chunk) {
+						inc(ta_state, 0, la_chunk, (~X[clause_patch*TA_CHUNKS + la_chunk]) & (~ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]));
 					}
 				}
 			}
@@ -205,19 +205,19 @@ code_update = """
 			int stride = blockDim.x * gridDim.x;
 
 			for (int clause = index; clause < CLAUSES; clause += stride) {
-				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
+				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
 
 				int clause_output;
 				for (int patch = 0; patch < PATCHES; ++patch) {
 					clause_output = 1;
-					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
-						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
+					for (int la_chunk = 0; la_chunk < TA_CHUNKS-1; ++la_chunk) {
+						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
 							clause_output = 0;
 							break;
 						}
 					}
 
-					if ((ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + LA_CHUNKS-1] & FILTER) != (ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER)) {
+					if ((ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + TA_CHUNKS-1] & FILTER) != (ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER)) {
 						clause_output = 0;
 					}
 
@@ -246,7 +246,7 @@ code_update = """
 
 			// Calculate clause output first
 			for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
-				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
+				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
 
 				unsigned int clause_output;
 				int clause_patch;
@@ -278,17 +278,17 @@ code_evaluate = """
 			int stride = blockDim.x * gridDim.x;
 
 			for (int clause = index; clause < CLAUSES; clause += stride) {
-				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
+				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
 
 				int all_exclude = 1;
-				for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
+				for (int la_chunk = 0; la_chunk < TA_CHUNKS-1; ++la_chunk) {
 					if (ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] > 0) {
 						all_exclude = 0;
 						break;
 					}
 				}
 
-				if ((ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER) > 0) {
+				if ((ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER) > 0) {
 					all_exclude = 0;
 				}
 
@@ -299,14 +299,14 @@ code_evaluate = """
 				int clause_output;
 				for (int patch = 0; patch < PATCHES; ++patch) {
 					clause_output = 1;
-					for (int la_chunk = 0; la_chunk < LA_CHUNKS-1; ++la_chunk) {
-						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
+					for (int la_chunk = 0; la_chunk < TA_CHUNKS-1; ++la_chunk) {
+						if ((ta_state[la_chunk*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + la_chunk]) != ta_state[la_chunk*STATE_BITS + STATE_BITS - 1]) {
 							clause_output = 0;
 							break;
 						}
 					}
 
-					if ((ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*LA_CHUNKS + LA_CHUNKS-1] & FILTER) != (ta_state[(LA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER)) {
+					if ((ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & X[patch*TA_CHUNKS + TA_CHUNKS-1] & FILTER) != (ta_state[(TA_CHUNKS-1)*STATE_BITS + STATE_BITS - 1] & FILTER)) {
 						clause_output = 0;
 					}
 
@@ -392,8 +392,8 @@ code_prepare = """
 					#endif
 				}
 
-				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
-				for (int la_chunk = 0; la_chunk < LA_CHUNKS; ++la_chunk) {
+				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
+				for (int la_chunk = 0; la_chunk < TA_CHUNKS; ++la_chunk) {
 					for (int b = 0; b < STATE_BITS-1; ++b) {
 						ta_state[la_chunk*STATE_BITS + b] = ~0;
 					}
@@ -419,7 +419,7 @@ code_prepare = """
 			curandState localState = state[index];
 
 			for (unsigned long long clause = index; clause < CLAUSES; clause += stride) {
-				unsigned int *ta_state = &global_ta_state[clause*LA_CHUNKS*STATE_BITS];
+				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
 
 				included_literals_length[clause] = 0;
 				for (int literal = 0; literal < FEATURES; ++literal) {
@@ -443,20 +443,20 @@ code_encode = """
 
 	extern "C"
     {
-		__global__ void encode(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
+		__global__ void encode(
+			unsigned int *X_indptr,
+			unsigned int *X_indices,
+			unsigned int *encoded_X,
+			int e,
+			int dim_x,
+			int dim_y,
+			int dim_z,
+			int patch_dim_x,
+			int patch_dim_y
+		)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
-
-			int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
-			int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
-
-			int number_of_ta_chunks;
-			if (append_negated) {
-				number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
-			} else {
-				number_of_ta_chunks= (((number_of_features-1)/32 + 1));
-			}
 
 			unsigned int *indices = &X_indices[X_indptr[e]];
 			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
@@ -466,7 +466,7 @@ code_encode = """
 				int x = (indices[k] % (dim_x*dim_z)) / dim_z;
 				int z = (indices[k] % (dim_x*dim_z)) % dim_z;
 
-				for (int patch = index; patch < number_of_patches; patch += stride) {
+				for (int patch = index; patch < PATCHES; patch += stride) {
 					int patch_coordinate_y = patch / (dim_x - patch_dim_x + 1);
 					int patch_coordinate_x = patch % (dim_x - patch_dim_x + 1);
 
@@ -474,38 +474,35 @@ code_encode = """
 						continue;
 					}
 
-					int p_y = y - patch_coordinate_y;
-					int p_x = x - patch_coordinate_x;
+					int clause_group = z / CLAUSE_GROUPS;
+					int g_z = z % CLAUSE_GROUPS;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int chunk_nr = g_z / 32;
+					int chunk_pos = g_z % 32;
 
-					int chunk_nr = patch_pos / 32;
-					int chunk_pos = patch_pos % 32;
-					encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-
-					if (append_negated) {
-						int chunk_nr = (patch_pos + number_of_features) / 32;
-						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-					}
+					encoded_X[patch * CLAUSE_GROUPS * TA_CHUNKS
+						+ clause_group * TA_CHUNKS
+						+ chunk_nr
+					]
+					&= ~(1U << chunk_pos);
 				}
 		    }		
 		}
 
-		__global__ void restore(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
+		__global__ void restore(
+			unsigned int *X_indptr,
+			unsigned int *X_indices,
+			unsigned int *encoded_X,
+			int e,
+			int dim_x,
+			int dim_y,
+			int dim_z,
+			int patch_dim_x,
+			int patch_dim_y
+		)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
-
-			int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
-			int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
-
-			int number_of_ta_chunks;
-			if (append_negated) {
-				number_of_ta_chunks= (((2*number_of_features-1)/32 + 1));
-			} else {
-				number_of_ta_chunks= (((number_of_features-1)/32 + 1));
-			}
 
 			unsigned int *indices = &X_indices[X_indptr[e]];
 			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
@@ -515,7 +512,7 @@ code_encode = """
 				int x = (indices[k] % (dim_x*dim_z)) / dim_z;
 				int z = (indices[k] % (dim_x*dim_z)) % dim_z;
 
-				for (int patch = index; patch < number_of_patches; patch += stride) {
+				for (int patch = index; patch < PATCHES; patch += stride) {
 					int patch_coordinate_y = patch / (dim_x - patch_dim_x + 1);
 					int patch_coordinate_x = patch % (dim_x - patch_dim_x + 1);
 
@@ -523,40 +520,26 @@ code_encode = """
 						continue;
 					}
 
-					int p_y = y - patch_coordinate_y;
-					int p_x = x - patch_coordinate_x;
+					int clause_group = z / CLAUSE_GROUPS;
+					int g_z = z % CLAUSE_GROUPS;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
+					int chunk_nr = g_z / 32;
+					int chunk_pos = g_z % 32;
 
-					int chunk_nr = patch_pos / 32;
-					int chunk_pos = patch_pos % 32;
-					encoded_X[patch * number_of_ta_chunks + chunk_nr] &= ~(1U << chunk_pos);
-
-					if (append_negated) {
-						int chunk_nr = (patch_pos + number_of_features) / 32;
-						int chunk_pos = (patch_pos + number_of_features) % 32;
-						encoded_X[patch * number_of_ta_chunks + chunk_nr] |= (1U << chunk_pos);
-					}
+					encoded_X[patch * CLAUSE_GROUPS * TA_CHUNKS
+						+ clause_group * TA_CHUNKS
+						+ chunk_nr
+					]
+					|= (1U << chunk_pos);
 				}
 		    }		
 		}
 
-		__global__ void encode_packed(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y, int append_negated, int class_features)
+		__global__ void encode_packed(unsigned int *X_indptr, unsigned int *X_indices, unsigned int *encoded_X, int e, int dim_x, int dim_y, int dim_z, int patch_dim_x, int patch_dim_y)
 		{
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
-			int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
-			int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
-			int number_of_patch_chunks = (number_of_patches-1) / 32 + 1;
-
-			int number_of_literals;
-			if (append_negated) {
-				number_of_literals = number_of_features*2;
-			} else {
-				number_of_literals = number_of_features;
-			}
-		
 			unsigned int *indices = &X_indices[X_indptr[e]];
 			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
 
@@ -565,7 +548,7 @@ code_encode = """
 				int x = (indices[k] % (dim_x*dim_z)) / dim_z;
 				int z = (indices[k] % (dim_x*dim_z)) % dim_z;
 
-				for (int patch = index; patch < number_of_patches; patch += stride) {
+				for (int patch = index; patch < PATCHES; patch += stride) {
 					int patch_coordinate_y = patch / (dim_x - patch_dim_x + 1);
 					int patch_coordinate_x = patch % (dim_x - patch_dim_x + 1);
 
@@ -573,19 +556,13 @@ code_encode = """
 						continue;
 					}
 
-					int chunk = patch / 32;
-					int pos = patch % 32;
+					int clause_group = z / CLAUSE_GROUPS;
+					int g_z = z % CLAUSE_GROUPS;
 
-					int p_y = y - patch_coordinate_y;
-					int p_x = x - patch_coordinate_x;
+					int patch_chunk = patch / 32;
+					int patch_pos = patch % 32;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
-
-					encoded_X[chunk * number_of_literals + patch_pos] |= (1U << pos);
-
-					if (append_negated) {
-						encoded_X[chunk * number_of_literals + patch_pos + number_of_features] &= ~(1U << pos);
-					}
+					encoded_X[patch_chunk * CLAUSE_GROUPS * FEATURES + clause_group * FEATURES + g_z] &= ~(1U << pos);
 				}
 		    }		
 		}
@@ -595,16 +572,6 @@ code_encode = """
 			int index = blockIdx.x * blockDim.x + threadIdx.x;
 			int stride = blockDim.x * gridDim.x;
 
-			int number_of_features = class_features + patch_dim_x * patch_dim_y * dim_z + (dim_x - patch_dim_x) + (dim_y - patch_dim_y);
-			int number_of_patches = (dim_x - patch_dim_x + 1) * (dim_y - patch_dim_y + 1);
-
-			int number_of_literals;
-			if (append_negated) {
-				number_of_literals = number_of_features*2;
-			} else {
-				number_of_literals = number_of_features;
-			}
-
 			unsigned int *indices = &X_indices[X_indptr[e]];
 			int number_of_indices = X_indptr[e + 1] - X_indptr[e]; 
 
@@ -613,7 +580,7 @@ code_encode = """
 				int x = (indices[k] % (dim_x*dim_z)) / dim_z;
 				int z = (indices[k] % (dim_x*dim_z)) % dim_z;
 
-				for (int patch = index; patch < number_of_patches; patch += stride) {
+				for (int patch = index; patch < PATCHES; patch += stride) {
 					int patch_coordinate_y = patch / (dim_x - patch_dim_x + 1);
 					int patch_coordinate_x = patch % (dim_x - patch_dim_x + 1);
 
@@ -621,21 +588,15 @@ code_encode = """
 						continue;
 					}
 
-					int chunk = patch / 32;
-					int pos = patch % 32;
+					int clause_group = z / CLAUSE_GROUPS;
+					int g_z = z % CLAUSE_GROUPS;
 
-					int p_y = y - patch_coordinate_y;
-					int p_x = x - patch_coordinate_x;
+					int patch_chunk = patch / 32;
+					int patch_pos = patch % 32;
 
-					int patch_pos = class_features + (dim_y - patch_dim_y) + (dim_x - patch_dim_x) + p_y * patch_dim_x * dim_z + p_x * dim_z + z;
-
-					encoded_X[chunk * number_of_literals + patch_pos] &= ~(1U << pos);
-
-					if (append_negated) {
-						encoded_X[chunk * number_of_literals + patch_pos + number_of_features] |= (1U << pos);
-					}
+					encoded_X[patch_chunk * CLAUSE_GROUPS * FEATURES + clause_group * FEATURES + g_z] |= (1U << pos);
 				}
-		    }		
+		    }
 		}
 
 		__global__ void produce_autoencoder_example(
