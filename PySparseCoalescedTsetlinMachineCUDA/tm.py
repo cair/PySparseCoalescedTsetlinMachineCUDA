@@ -222,6 +222,8 @@ class CommonTsetlinMachine():
 #define NUMBER_OF_EXAMPLES %d
 """ % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.number_of_clause_groups, self.max_included_literals, self.negative_clauses, self.number_of_patches, X.shape[0])
 
+		print(parameters)
+
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
 		self.prepare_packed = mod_prepare.get_function("prepare_packed")
