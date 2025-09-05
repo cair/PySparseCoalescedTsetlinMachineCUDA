@@ -602,7 +602,7 @@ code_encode = """
 					int patch_chunk = patch / 32;
 					int patch_pos = patch % 32;
 
-					encoded_X[patch_chunk * CLAUSE_GROUPS * FEATURES + clause_group * FEATURES + g_z] |= (1U << pos);
+					encoded_X[patch_chunk * CLAUSE_GROUPS * FEATURES + clause_group * FEATURES + g_z] |= (1U << patch_pos);
 				}
 		    }
 		}
