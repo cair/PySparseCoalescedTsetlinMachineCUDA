@@ -243,14 +243,14 @@ class CommonTsetlinMachine():
 		self.evaluate_packed.prepare("PPPPPPP")
 
 		encoded_X = np.empty((self.number_of_patches * self.number_of_clause_groups * self.number_of_ta_chunks), dtype=np.uint32)
-		encoded_X[:] = ~np.uint32(0)
+		encoded_X[:] = np.uint32(0)
 		self.encoded_X_gpu = cuda.mem_alloc(encoded_X.nbytes)
 		cuda.memcpy_htod(self.encoded_X_gpu, encoded_X)
 
 		# Encoded X packed
 
 		encoded_X_packed = np.empty((((self.number_of_patches-1)//32 + 1) * self.number_of_clause_groups * self.number_of_features), dtype=np.uint32)
-		encoded_X_packed[:] = np.uint32(~0)
+		encoded_X_packed[:] = ~np.uint32(0)
 		self.encoded_X_packed_gpu = cuda.mem_alloc(encoded_X_packed.nbytes)
 		cuda.memcpy_htod(self.encoded_X_packed_gpu, encoded_X_packed)
 
