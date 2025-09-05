@@ -18,7 +18,7 @@ for i in range(examples):
 average_accuracy = 0.0
 
 for i in range(100):
-	tm = MultiOutputTsetlinMachine(10, 15, 3.9, boost_true_positive_feedback=0)
+	tm = MultiClassTsetlinMachine(10, 15, 3.9, boost_true_positive_feedback=0)
 
 	tm.fit(X_train, Y_train, epochs=200)
 
