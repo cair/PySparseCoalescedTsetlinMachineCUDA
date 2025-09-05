@@ -71,22 +71,6 @@ class CommonTsetlinMachine():
 		self.ta_state = np.array([])
 		self.clause_weights = np.array([])
 
-		mod_encode = SourceModule(kernels.code_encode, no_extern_c=True)
-		self.encode = mod_encode.get_function("encode")
-		self.encode.prepare("PPPiiiiii")
-		
-		self.restore = mod_encode.get_function("restore")
-		self.restore.prepare("PPPiiiiii")
-
-		self.encode_packed = mod_encode.get_function("encode_packed")
-		self.encode_packed.prepare("PPPiiiiii")
-		
-		self.restore_packed = mod_encode.get_function("restore_packed")
-		self.restore_packed.prepare("PPPiiiiii")
-
-		self.produce_autoencoder_examples= mod_encode.get_function("produce_autoencoder_example")
-		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
-
 		self.initialized = False
 
 	def allocate_gpu_memory(self):
@@ -223,6 +207,22 @@ class CommonTsetlinMachine():
 """ % (self.number_of_outputs, self.number_of_clauses, self.number_of_features, self.number_of_state_bits, self.boost_true_positive_feedback, self.s, self.T, self.q, self.number_of_clause_groups, self.max_included_literals, self.negative_clauses, self.number_of_patches, X.shape[0])
 
 		print(parameters)
+
+		mod_encode = SourceModule(parameters + kernels.code_encode, no_extern_c=True)
+		self.encode = mod_encode.get_function("encode")
+		self.encode.prepare("PPPiiiiii")
+		
+		self.restore = mod_encode.get_function("restore")
+		self.restore.prepare("PPPiiiiii")
+
+		self.encode_packed = mod_encode.get_function("encode_packed")
+		self.encode_packed.prepare("PPPiiiiii")
+		
+		self.restore_packed = mod_encode.get_function("restore_packed")
+		self.restore_packed.prepare("PPPiiiiii")
+
+		self.produce_autoencoder_examples= mod_encode.get_function("produce_autoencoder_example")
+		self.produce_autoencoder_examples.prepare("PPiPPiPPiPPiiii")
 
 		mod_prepare = SourceModule(parameters + kernels.code_header + kernels.code_prepare, no_extern_c=True)
 		self.prepare = mod_prepare.get_function("prepare")
