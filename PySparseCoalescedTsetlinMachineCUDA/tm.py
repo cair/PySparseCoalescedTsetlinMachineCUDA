@@ -208,7 +208,7 @@ class CommonTsetlinMachine():
 
 		print(parameters)
 
-		mod_encode = SourceModule(parameters + kernels.code_encode, no_extern_c=True)
+		mod_encode = SourceModule(parameters + kernels.code_header + kernels.code_encode, no_extern_c=True)
 		self.encode = mod_encode.get_function("encode")
 		self.encode.prepare("PPPiiiiii")
 		
