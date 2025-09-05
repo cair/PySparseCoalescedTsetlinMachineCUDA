@@ -207,7 +207,7 @@ code_update = """
 			for (int clause = index; clause < CLAUSES; clause += stride) {
 				unsigned int *ta_state = &global_ta_state[clause*TA_CHUNKS*STATE_BITS];
 
-				int clause_group = clause / (CLAUSES / CLAUSE GROUPS);
+				int clause_group = clause / (CLAUSES / CLAUSE_GROUPS);
 
 				int clause_output;
 				for (int patch = 0; patch < PATCHES; ++patch) {
@@ -254,7 +254,7 @@ code_update = """
 				int clause_patch;
 				calculate_clause_output(&localState, ta_state, &clause_output, &clause_patch, X);
 
-				int clause_group = clause / (CLAUSES / CLAUSE GROUPS);
+				int clause_group = clause / (CLAUSES / CLAUSE_GROUPS);
 
 				for (unsigned long long class_id = 0; class_id < CLASSES; ++class_id) {
 					int local_class_sum = class_sum[class_id];
@@ -300,7 +300,7 @@ code_evaluate = """
 					continue;
 				}
 
-				int clause_group = clause / (CLAUSES / CLAUSE GROUPS);
+				int clause_group = clause / (CLAUSES / CLAUSE_GROUPS);
 
 				int clause_output;
 				for (int patch = 0; patch < PATCHES; ++patch) {
@@ -349,7 +349,7 @@ code_evaluate = """
 					continue;
 				}
 
-				int clause_group = clause / (CLAUSES / CLAUSE GROUPS);
+				int clause_group = clause / (CLAUSES / CLAUSE_GROUPS);
 
 				unsigned int clause_output = 0;
 				for (int patch_chunk = 0; patch_chunk < PATCH_CHUNKS-1; ++patch_chunk) {
