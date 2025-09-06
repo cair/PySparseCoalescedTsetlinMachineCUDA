@@ -14,12 +14,12 @@ Y_train = np.zeros(X_train.shape[0], dtype=np.uint32)
 
 for i in range(examples):
 	Y_train[i] = np.random.random() <= 0.5
-	print(p.shape[Y_train[i]])
+	print(Y_train[i], p.shape[Y_train[i]])
 	for k in range(p.shape[Y_train[i]]):
 		X_train[i, k] = np.random.random() <= p[Y_train[i], k]
 
 	print(X_train[i,:])
-	
+
 average_accuracy = 0.0
 
 for i in range(100):
