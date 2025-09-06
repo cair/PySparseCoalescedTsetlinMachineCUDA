@@ -250,7 +250,7 @@ class CommonTsetlinMachine():
 		# Encoded X packed
 
 		encoded_X_packed = np.empty((((self.number_of_patches-1)//32 + 1) * self.number_of_clause_groups * self.number_of_features), dtype=np.uint32)
-		encoded_X_packed[:] = ~np.uint32(0)
+		encoded_X_packed[:] = np.uint32(0)
 		self.encoded_X_packed_gpu = cuda.mem_alloc(encoded_X_packed.nbytes)
 		cuda.memcpy_htod(self.encoded_X_packed_gpu, encoded_X_packed)
 
@@ -296,7 +296,7 @@ class CommonTsetlinMachine():
 				self.update.prepared_call(self.grid, self.block, g.state, self.ta_state_gpu, self.clause_weights_gpu, self.class_sum_gpu, self.encoded_X_gpu, self.encoded_Y_gpu, np.int32(e))
 				cuda.Context.synchronize()
 
-				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]))
+				self.restore.prepared_call(self.grid, self.block, self.X_train_indptr_gpu, self.X_train_indices_gpu, self.encoded_X_gpu, np.int32(e), np.int32(self.dim[0]), np.int32(self.dim[1]), np.int32(self.dim[2]), np.int32(self.patch_dim[0]), np.int32(self.patch_dim[0]))
 				cuda.Context.synchronize()
 
 		self.ta_state = np.array([])
